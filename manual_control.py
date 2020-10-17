@@ -100,7 +100,6 @@ def update(dt):
     print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
 
     if key_handler[key.RETURN]:
-        # TODELETE: print('key.RETURN pressed!')
         from PIL import Image
         im = Image.fromarray(obs)
 
@@ -111,25 +110,8 @@ def update(dt):
         env.reset()
         env.render()
 
-    # save = True
-    save = False
-    if save:
-        global counter 
-
-        from PIL import Image
-        im = Image.fromarray(obs)
-
-        # from random import randint
-        image_directory = "./images/"
-        action_directory = "./actions/"
-        image_filename = f'X_{counter}.png'
-        action_filename = f'Y_{counter}.npy'
-        im.save(image_directory + image_filename)
-        np.save(action_directory + action_filename, action)
-        counter += 1
     env.render()
 
-counter = 0
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
 # Enter main event loop
