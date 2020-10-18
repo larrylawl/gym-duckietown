@@ -557,6 +557,7 @@ class Simulator(gym.Env):
 
         # We keep a separate list of drivable tiles
         self.drivable_tiles = []
+        self.obstacle_tiles = []
 
         # For each row in the grid
         for j, row in enumerate(tiles):
@@ -598,6 +599,8 @@ class Simulator(gym.Env):
                 if drivable:
                     tile['curves'] = self._get_curve(i, j)
                     self.drivable_tiles.append(tile)
+                else:
+                    self.obstacle_tiles.append(tile)
 
         self.mesh = ObjMesh.get('duckiebot')
         self._load_objects(map_data)

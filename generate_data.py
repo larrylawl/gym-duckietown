@@ -73,6 +73,31 @@ def on_key_press(symbol, modifiers):
 key_handler = key.KeyStateHandler()
 env.unwrapped.window.push_handlers(key_handler)
 
+# def obstacle_tiles():
+#     """
+#     Returns an array of the obstacle tiles coordinates.
+#     """
+#     obstacle_tiles = []
+
+#     for tile in env.grid:
+#         if not tile['drivable']:
+#             obstacle_tiles.append(tile)
+    
+#     return obstacle_tiles
+
+    # drivable_tiles_coords = []
+    # print(f'Grid height: {env.grid_height}')
+    # print(f'Grid width: {env.grid_width}')
+    # np.arange(2, 10, dtype=float)
+    
+    # Loop through grid to obtain obstacle tiles (i.e. not drivable)
+    # Convert to 2D array
+    # Check if it tallies with position (?)
+
+    # for tile in env.drivable_tiles:
+        # print(tile['coords'])
+        # drivable_tiles_coords.append(tile['coords'])
+
 def update(dt):
     """
     This function is called at every frame to handle
@@ -90,6 +115,7 @@ def update(dt):
     print(f'v: {v}')
     print(f'omega: {omega}')
     # tile coords might be useful
+    print(env.obstacle_tiles)
 
     action = np.array([0.0, 0.0])
 
@@ -141,9 +167,6 @@ def update(dt):
         counter += 1
     env.render()
 
-counter = 0
-v = 0
-yaw = 0
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
 # Enter main event loop
