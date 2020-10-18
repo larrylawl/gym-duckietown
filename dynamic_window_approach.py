@@ -1,24 +1,3 @@
-#!/usr/bin/env python
-# manual
-
-"""
-This script allows you to manually control the simulator or Duckiebot
-using the keyboard arrows.
-"""
-
-import sys
-import argparse
-import pyglet
-from pyglet.window import key
-import numpy as np
-import gym
-import gym_duckietown
-from gym_duckietown.envs import DuckietownEnv
-from gym_duckietown.wrappers import UndistortWrapper
-from gym_duckietown.simulator import ROBOT_LENGTH, ROBOT_WIDTH
-
-# from experiments.utils import save_img
-
 """
 
 Mobile robot motion planning sample with Dynamic Window Approach
@@ -33,120 +12,8 @@ from enum import Enum
 import matplotlib.pyplot as plt
 import numpy as np
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--env-name', default=None)
-parser.add_argument('--map-name', default='udem1')
-parser.add_argument('--distortion', default=False, action='store_true')
-parser.add_argument('--draw-curve', action='store_true', help='draw the lane following curve')
-parser.add_argument('--draw-bbox', action='store_true', help='draw collision detection bounding boxes')
-parser.add_argument('--domain-rand', action='store_true', help='enable domain randomization')
-parser.add_argument('--frame-skip', default=1, type=int, help='number of frames to skip')
-parser.add_argument('--seed', default=1, type=int, help='seed')
-args = parser.parse_args()
+show_animation = True
 
-if args.env_name and args.env_name.find('Duckietown') != -1:
-    env = DuckietownEnv(
-        seed = args.seed,
-        map_name = args.map_name,
-        draw_curve = args.draw_curve,
-        draw_bbox = args.draw_bbox,
-        domain_rand = args.domain_rand,
-        frame_skip = args.frame_skip,
-        distortion = args.distortion,
-    )
-else:
-    env = gym.make(args.env_name)
-
-env.reset()
-env.render()
-
-@env.unwrapped.window.event
-def on_key_press(symbol, modifiers):
-    """
-    This handler processes keyboard commands that
-    control the simulation
-    """
-
-    if symbol == key.BACKSPACE or symbol == key.SLASH:
-        print('RESET')
-        env.reset()
-        env.render()
-    elif symbol == key.PAGEUP:
-        env.unwrapped.cam_angle[0] = 0
-    elif symbol == key.ESCAPE:
-        env.close()
-        sys.exit(0)
-
-    # Take a screenshot
-    # UNCOMMENT IF NEEDED - Skimage dependency
-    # elif symbol == key.RETURN:
-    #     print('saving screenshot')
-    #     img = env.render('rgb_array')
-    #     save_img('screenshot.png', img)
-
-# Register a keyboard handler
-key_handler = key.KeyStateHandler()
-env.unwrapped.window.push_handlers(key_handler)
-
-def update(dt):
-    """
-    This function is called at every frame to handle
-    movement/stepping and redrawing
-    """
-
-    dwa()
-
-    action = np.array([0.0, 0.0])
-
-    if key_handler[key.UP]:
-        action = np.array([0.44, 0.0])
-    if key_handler[key.DOWN]:
-        action = np.array([-0.44, 0])
-    if key_handler[key.LEFT]:
-        action = np.array([0.35, +1])
-    if key_handler[key.RIGHT]:
-        action = np.array([0.35, -1])
-    if key_handler[key.SPACE]:
-        action = np.array([0, 0])
-
-    # Speed boost
-    if key_handler[key.LSHIFT]:
-        action *= 1.5
-
-    obs, reward, done, info = env.step(action)
-    print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
-
-    if key_handler[key.RETURN]:
-        # TODELETE: print('key.RETURN pressed!')
-        from PIL import Image
-        im = Image.fromarray(obs)
-
-        im.save('screen.png')
-
-    if done:
-        print('done!')
-        env.reset()
-        env.render()
-
-    # save = True
-    save = False
-    if save:
-        global counter 
-
-        from PIL import Image
-        im = Image.fromarray(obs)
-
-        # from random import randint
-        image_directory = "./images/"
-        action_directory = "./actions/"
-        image_filename = f'X_{counter}.png'
-        action_filename = f'Y_{counter}.npy'
-        im.save(image_directory + image_filename)
-        np.save(action_directory + action_filename, action)
-        counter += 1
-    env.render()
-
-show_animation = True #set
 
 def dwa_control(x, config, goal, ob):
     """
@@ -191,13 +58,25 @@ class Config:
         self.robot_radius = 1.0  # [m] for collision check
 
         # if robot_type == RobotType.rectangle
-        self.robot_width = ROBOT_WIDTH  # [m] for collision check
-        self.robot_length = ROBOT_LENGTH  # [m] for collision check
+        self.robot_width = 0.5  # [m] for collision check
+        self.robot_length = 1.2  # [m] for collision check
         # obstacles [x(m) y(m), ....]
-        ob_cood = []
-        for tile in env.obstacle_tiles:
-            ob_cood.append(tile['coords'])
-        self.ob = np.array(ob_cood)
+        self.ob = np.array([[-1, -1],
+                            [0, 2],
+                            [4.0, 2.0],
+                            [5.0, 4.0],
+                            [5.0, 5.0],
+                            [5.0, 6.0],
+                            [5.0, 9.0],
+                            [8.0, 9.0],
+                            [7.0, 9.0],
+                            [8.0, 10.0],
+                            [9.0, 11.0],
+                            [12.0, 13.0],
+                            [12.0, 12.0],
+                            [15.0, 15.0],
+                            [13.0, 13.0]
+                            ])
 
     @property
     def robot_type(self):
@@ -378,25 +257,10 @@ def plot_robot(x, y, yaw, config):  # pragma: no cover
         plt.plot([x, out_x], [y, out_y], "-k")
 
 
-def dwa(gx=5.0, gy=5.0, robot_type=RobotType.rectangle):
-    """
-    Dynamic Window Approach. Returns the action tuple (velocity, angle).
-    
-    Credits: https://github.com/larrylawl/PythonRobotics/tree/master/PathPlanning/DynamicWindowApproach
-    """
-
+def main(gx=10.0, gy=10.0, robot_type=RobotType.circle):
     print(__file__ + " start!!")
-    info = env.get_agent_info()['Simulator']
-    # print(f'Agent Info: {info}')
-    px, _, pz = info['cur_pos'] 
-    yaw = env.cur_angle
-    v = info['robot_speed']
-    Vl, Vr = info['wheel_velocities']
-    l = env.wheel_dist
-    w = (Vr - Vl) / l
-
     # initial state [x(m), y(m), yaw(rad), v(m/s), omega(rad/s)]
-    x = np.array([px, pz, yaw, v, w])
+    x = np.array([0.0, 0.0, math.pi / 8.0, 0.0, 0.0])
     # goal position [x(m), y(m)]
     goal = np.array([gx, gy])
 
@@ -438,11 +302,8 @@ def dwa(gx=5.0, gy=5.0, robot_type=RobotType.rectangle):
         plt.pause(0.0001)
 
     plt.show()
-    # TODO: Return intention. Should you finish plotting the map before returning intention?
 
-pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
-# Enter main event loop
-pyglet.app.run()
-
-env.close()
+if __name__ == '__main__':
+    main(robot_type=RobotType.rectangle)
+    # main(robot_type=RobotType.circle)
