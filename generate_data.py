@@ -79,6 +79,18 @@ def update(dt):
     movement/stepping and redrawing
     """
 
+    info = env.get_agent_info()['Simulator']
+    # print(f'Agent Info: {info}')
+    x, _, y = info['cur_pos'] 
+    yaw = info['lane_position']['angle_rad']
+    v = info['robot_speed']
+    omega = (v + yaw * env.unwrapped.wheel_dist) / env.radius
+    print(f'pos: {x} and {y}')
+    print(f'yaw: {yaw}')
+    print(f'v: {v}')
+    print(f'omega: {omega}')
+    # tile coords might be useful
+
     action = np.array([0.0, 0.0])
 
     if key_handler[key.UP]:
@@ -130,6 +142,8 @@ def update(dt):
     env.render()
 
 counter = 0
+v = 0
+yaw = 0
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
 # Enter main event loop

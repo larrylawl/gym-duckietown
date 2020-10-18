@@ -153,7 +153,7 @@ class Simulator(gym.Env):
             camera_height=DEFAULT_CAMERA_HEIGHT,
             robot_speed=DEFAULT_ROBOT_SPEED,
             accept_start_angle_deg=DEFAULT_ACCEPT_START_ANGLE_DEG,
-            full_transparency=False,
+            full_transparency=True,
             user_tile_start=None,
             seed=None,
             distortion=False,
@@ -1220,6 +1220,7 @@ class Simulator(gym.Env):
                                                    self.wheel_dist,
                                                    wheelVels=self.wheelVels,
                                                    deltaTime=delta_time)
+        # print(f'Current position:{self.cur_pos}')
         self.step_count += 1
         self.timestamp += delta_time
 
@@ -1733,7 +1734,7 @@ def _update_pos(pos, angle, wheel_dist, wheelVels, deltaTime):
 
     # Rotate the robot's position around the center of rotation
     r_vec = get_right_vec(angle)
-    px, py, pz = pos
+    px, py, pz = pos # 3D data
     cx = px + r * r_vec[0]
     cz = pz + r * r_vec[2]
     npx, npz = rotate_point(px, pz, cx, cz, rotAngle)
