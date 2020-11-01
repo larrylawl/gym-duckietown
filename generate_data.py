@@ -254,7 +254,11 @@ class Config:
         # obstacles [x(m) y(m), ....]
         ob_cood = []
         for tile in env.obstacle_tiles:
-            ob_cood.append(tile['coords'])
+            # reflect about x-axis to fit duckietown's map
+            # e.g. duckietown's (2,3) coordinate is actually (2, -3)
+            (x, y) = tile['coords']
+            flipped_tile = (x, -y)
+            ob_cood.append(flipped_tile)
         self.ob = np.array(ob_cood)
 
     @property
@@ -436,7 +440,7 @@ def plot_robot(x, y, yaw, config):  # pragma: no cover
         plt.plot([x, out_x], [y, out_y], "-k")
 
 
-def dwa(gx=5.0, gy=5.0, robot_type=RobotType.rectangle):
+def dwa(gx=5.0, gy=-5.0, robot_type=RobotType.rectangle):
     """
     Dynamic Window Approach. Returns the intention image.
     
@@ -447,6 +451,7 @@ def dwa(gx=5.0, gy=5.0, robot_type=RobotType.rectangle):
     info = env.get_agent_info()['Simulator']
     # print(f'Agent Info: {info}')
     px, _, pz = info['cur_pos'] 
+    pz *= -1 # flip y-axis to fit duckytown's coordinates 
     yaw = env.cur_angle
     v = info['robot_speed']
     # Formula for angular velocity: http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
