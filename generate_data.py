@@ -94,7 +94,7 @@ def update(dt):
     movement/stepping and redrawing
     """
 
-    dwa()
+    # dwa()
 
     action = np.array([0.0, 0.0])
 
@@ -380,7 +380,7 @@ def plot_robot(x, y, yaw, config):  # pragma: no cover
 
 def dwa(gx=5.0, gy=5.0, robot_type=RobotType.rectangle):
     """
-    Dynamic Window Approach. Returns the action tuple (velocity, angle).
+    Dynamic Window Approach. Returns the intention image.
     
     Credits: https://github.com/larrylawl/PythonRobotics/tree/master/PathPlanning/DynamicWindowApproach
     """
@@ -391,12 +391,13 @@ def dwa(gx=5.0, gy=5.0, robot_type=RobotType.rectangle):
     px, _, pz = info['cur_pos'] 
     yaw = env.cur_angle
     v = info['robot_speed']
+    # Formula for angular velocity: http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
     Vl, Vr = info['wheel_velocities']
     l = env.wheel_dist
     w = (Vr - Vl) / l
-
-    # initial state [x(m), y(m), yaw(rad), v(m/s), omega(rad/s)]
+    # initial state [x(m), y(m), yaw(rad), v(m/s), omega/angular velocity(rad/s)]
     x = np.array([px, pz, yaw, v, w])
+    print(f"[px, pz, yaw, v, w]: {x}")
     # goal position [x(m), y(m)]
     goal = np.array([gx, gy])
 
