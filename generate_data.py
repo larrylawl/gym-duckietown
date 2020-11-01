@@ -54,7 +54,7 @@ parser.add_argument('--frame-skip', default=1, type=int, help='number of frames 
 parser.add_argument('--seed', default=1, type=int, help='seed')
 parser.add_argument('--save', default=False, type=str2bool, help='Saves datasets.')
 parser.add_argument('--image_dir', default="./images/", type=str, help='Directory to save images.')
-parser.add_argument('--action_dir', default="./actions/", type=str, help='Directory to save images.')
+parser.add_argument('--action_dir', default="./actions/", type=str, help='Directory to save actions.')
 args = parser.parse_args()
 
 if args.env_name and args.env_name.find('Duckietown') != -1:
@@ -77,6 +77,8 @@ if args.save:
     image_directory = args.image_dir
     action_directory = args.action_dir
     counter = 0
+    image_filename = f'X_{counter}.png'
+    action_filename = f'Y_{counter}.npy'
     # Ensures image and action directory are specified
     assert image_directory is not None
     assert action_directory is not None
@@ -114,13 +116,34 @@ def on_key_press(symbol, modifiers):
 key_handler = key.KeyStateHandler()
 env.unwrapped.window.push_handlers(key_handler)
 
+# calls planning every %plan_freq steps
+plan_freq = 100
+plan_counter = plan_freq
+
+def should_plan():
+    result = False
+    info = env.get_agent_info()['Simulator']
+    action = info['action']
+    if action[0] != 0.0 or action[1] != 0.0:
+        # action taken
+        global plan_counter
+        if plan_counter == plan_freq:
+            plan_counter = 0
+            result = True
+        else:
+            plan_counter += 1
+    print(f"should plan: {result}")
+    return result
+        
+
 def update(dt):
     """
     This function is called at every frame to handle
     movement/stepping and redrawing
     """
-
-    # dwa()
+    # Replans after %plan_freq number of steps. Note that no steps are taken when stationary.
+    
+    if should_plan(): dwa()
 
     action = np.array([0.0, 0.0])
 
@@ -135,6 +158,7 @@ def update(dt):
     if key_handler[key.SPACE]:
         action = np.array([0, 0])
 
+    print(f"action: {action}")
     # Speed boost
     if key_handler[key.LSHIFT]:
         action *= 1.5
@@ -161,8 +185,6 @@ def update(dt):
         im = Image.fromarray(obs)
 
         # from random import randint
-        image_directory = "./images/"
-        action_directory = "./actions/"
         image_filename = f'X_{counter}.png'
         action_filename = f'Y_{counter}.npy'
         im.save(image_directory + image_filename)
@@ -463,7 +485,6 @@ def dwa(gx=5.0, gy=5.0, robot_type=RobotType.rectangle):
         plt.pause(0.0001)
 
     plt.show()
-    # TODO: Return intention. Should you finish plotting the map before returning intention?
 
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
