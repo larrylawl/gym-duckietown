@@ -87,6 +87,7 @@ if args.save:
     
 env.reset()
 env.render()
+top_down = False
 
 @env.unwrapped.window.event
 def on_key_press(symbol, modifiers):
@@ -94,16 +95,24 @@ def on_key_press(symbol, modifiers):
     This handler processes keyboard commands that
     control the simulation
     """
+    global top_down
 
     if symbol == key.BACKSPACE or symbol == key.SLASH:
         print('RESET')
         env.reset()
         env.render()
+        top_down = False
     elif symbol == key.PAGEUP:
         env.unwrapped.cam_angle[0] = 0
     elif symbol == key.ESCAPE:
         env.close()
         sys.exit(0)
+    elif symbol == key.SPACE:
+        top_down = not top_down
+        if top_down:
+            env.render(mode='top_down')
+        else:
+            env.render()
 
     # Take a screenshot
     # UNCOMMENT IF NEEDED - Skimage dependency
@@ -176,6 +185,10 @@ def update(dt):
     if done:
         print('done!')
         env.reset()
+    
+    if top_down:
+        env.render(mode = 'top_down')
+    else:
         env.render()
 
     if args.save:
@@ -190,7 +203,6 @@ def update(dt):
         im.save(image_directory + image_filename)
         np.save(action_directory + action_filename, action)
         counter += 1
-    env.render()
 
 show_animation = True #set
 
