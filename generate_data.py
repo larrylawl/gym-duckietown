@@ -33,6 +33,16 @@ from enum import Enum
 import matplotlib.pyplot as plt
 import numpy as np
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--env-name', default=None)
 parser.add_argument('--map-name', default='udem1')
@@ -42,6 +52,9 @@ parser.add_argument('--draw-bbox', action='store_true', help='draw collision det
 parser.add_argument('--domain-rand', action='store_true', help='enable domain randomization')
 parser.add_argument('--frame-skip', default=1, type=int, help='number of frames to skip')
 parser.add_argument('--seed', default=1, type=int, help='seed')
+parser.add_argument('--save', default=False, type=str2bool, help='Saves datasets.')
+parser.add_argument('--image_dir', default="./images/", type=str, help='Directory to save images.')
+parser.add_argument('--action_dir', default="./actions/", type=str, help='Directory to save images.')
 args = parser.parse_args()
 
 if args.env_name and args.env_name.find('Duckietown') != -1:
@@ -57,6 +70,19 @@ if args.env_name and args.env_name.find('Duckietown') != -1:
 else:
     env = gym.make(args.env_name)
 
+print(args)
+if args.save:
+    # sets variables
+    save = args.save
+    image_directory = args.image_dir
+    action_directory = args.action_dir
+    counter = 0
+    # Ensures image and action directory are specified
+    assert image_directory is not None
+    assert action_directory is not None
+
+    print(f"Save is turned on. Images will be saved in {image_directory}. Actions will be saved in {action_directory}.")
+    
 env.reset()
 env.render()
 
@@ -128,9 +154,7 @@ def update(dt):
         env.reset()
         env.render()
 
-    # save = True
-    save = False
-    if save:
+    if args.save:
         global counter 
 
         from PIL import Image
