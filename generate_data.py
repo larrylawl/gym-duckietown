@@ -55,6 +55,7 @@ parser.add_argument('--seed', default=1, type=int, help='seed')
 parser.add_argument('--save', default=False, type=str2bool, help='Saves datasets.')
 parser.add_argument('--image_dir', default="./images/", type=str, help='Directory to save images.')
 parser.add_argument('--action_dir', default="./actions/", type=str, help='Directory to save actions.')
+parser.add_argument('--intent_dir', default="./intentions/", type=str, help='Directory to save intentions.')
 args = parser.parse_args()
 
 if args.env_name and args.env_name.find('Duckietown') != -1:
@@ -74,16 +75,16 @@ print(args)
 if args.save:
     # sets variables
     save = args.save
-    image_directory = args.image_dir
-    action_directory = args.action_dir
+    image_dir = args.image_dir
+    action_dir = args.action_dir
+    intent_dir = args.intent_dir
     counter = 0
-    image_filename = f'X_{counter}.png'
-    action_filename = f'Y_{counter}.npy'
     # Ensures image and action directory are specified
-    assert image_directory is not None
-    assert action_directory is not None
+    assert image_dir is not None
+    assert action_dir is not None
+    assert intent_dir is not None
 
-    print(f"Save is turned on. Images will be saved in {image_directory}. Actions will be saved in {action_directory}.")
+    print(f"Save is turned on. Images will be saved in {image_dir}. Actions will be saved in {action_dir}. Intentions will be saved in {intent_dir}.")
     
 env.reset()
 env.render()
@@ -130,6 +131,8 @@ plan_freq = 100
 plan_counter = plan_freq
 
 def should_plan():
+    # Replans after %plan_freq number of steps. Note that no steps are taken when stationary.
+
     result = False
     info = env.get_agent_info()['Simulator']
     action = info['action']
@@ -141,7 +144,6 @@ def should_plan():
             result = True
         else:
             plan_counter += 1
-    print(f"should plan: {result}")
     return result
         
 
@@ -150,7 +152,6 @@ def update(dt):
     This function is called at every frame to handle
     movement/stepping and redrawing
     """
-    # Replans after %plan_freq number of steps. Note that no steps are taken when stationary.
     
     if should_plan(): dwa()
 
@@ -167,7 +168,6 @@ def update(dt):
     if key_handler[key.SPACE]:
         action = np.array([0, 0])
 
-    print(f"action: {action}")
     # Speed boost
     if key_handler[key.LSHIFT]:
         action *= 1.5
@@ -200,8 +200,12 @@ def update(dt):
         # from random import randint
         image_filename = f'X_{counter}.png'
         action_filename = f'Y_{counter}.npy'
-        im.save(image_directory + image_filename)
-        np.save(action_directory + action_filename, action)
+        im.save(image_dir + image_filename)
+        np.save(action_dir + action_filename, action)
+
+        # if should_plan():
+        #     # uses new planning image
+        #     plt.savefig(intent_dir + f'I_{counter}.png')
         counter += 1
 
 show_animation = True #set
@@ -257,8 +261,13 @@ class Config:
             # reflect about x-axis to fit duckietown's map
             # e.g. duckietown's (2,3) coordinate is actually (2, -3)
             (x, y) = tile['coords']
-            flipped_tile = (x, -y)
-            ob_cood.append(flipped_tile)
+            # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
+            ob_cood.append((x, -y))
+
+            # freq = 5 # I can't connect the dots. So i'm plotting %freq number of discrete dots to mimick a continuous line.
+            # for i in range(freq):
+            #     for j in range(freq):
+            #         ob_cood.append((x + i/freq, -y - j/freq))
         self.ob = np.array(ob_cood)
 
     @property
@@ -299,14 +308,17 @@ def calc_dynamic_window(x, config):
           -config.max_yaw_rate, config.max_yaw_rate]
 
     # Dynamic window from motion model
-    Vd = [x[3] - config.max_accel * config.dt,
+    Vd = [x[3] - config.max_accel * config.dt, # -0.5 to reduce min speed which gives planner option to just rotate on the spot. allowing rotation mitigates the problem of ducky going out of the map.
           x[3] + config.max_accel * config.dt,
           x[4] - config.max_delta_yaw_rate * config.dt,
           x[4] + config.max_delta_yaw_rate * config.dt]
 
     #  [v_min, v_max, yaw_rate_min, yaw_rate_max]
+    print(f"vs[0]: {Vs[0]}")
+    print(f"vd[0]: {Vd[0]}")
     dw = [max(Vs[0], Vd[0]), min(Vs[1], Vd[1]),
           max(Vs[2], Vd[2]), min(Vs[3], Vd[3])]
+    print(f"dw: {dw}")
 
     return dw
 
@@ -440,9 +452,9 @@ def plot_robot(x, y, yaw, config):  # pragma: no cover
         plt.plot([x, out_x], [y, out_y], "-k")
 
 
-def dwa(gx=5.0, gy=-5.0, robot_type=RobotType.rectangle):
+def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
     """
-    Dynamic Window Approach. Returns the intention image.
+    Dynamic Window Approach. Plots the intention image. If successful, trajectory will be shown. Else, only map will be shown.
     
     Credits: https://github.com/larrylawl/PythonRobotics/tree/master/PathPlanning/DynamicWindowApproach
     """
@@ -460,7 +472,7 @@ def dwa(gx=5.0, gy=-5.0, robot_type=RobotType.rectangle):
     w = (Vr - Vl) / l
     # initial state [x(m), y(m), yaw(rad), v(m/s), omega/angular velocity(rad/s)]
     x = np.array([px, pz, yaw, v, w])
-    print(f"[px, pz, yaw, v, w]: {x}")
+    # print(f"[px, pz, yaw, v, w]: {x}")
     # goal position [x(m), y(m)]
     goal = np.array([gx, gy])
 
@@ -469,6 +481,11 @@ def dwa(gx=5.0, gy=-5.0, robot_type=RobotType.rectangle):
     config.robot_type = robot_type
     trajectory = np.array(x)
     ob = config.ob
+
+    # If dist_to_goal does not improve after %early_stopping_threshold number of steps, breaks out of planning.
+    early_stopping_threshold = 20
+    early_stopping_counter = 0
+    best_dist_go_goal = 99999
     while True:
         u, predicted_trajectory = dwa_control(x, config, goal, ob)
         x = motion(x, u, config.dt)  # simulate robot
@@ -492,14 +509,24 @@ def dwa(gx=5.0, gy=-5.0, robot_type=RobotType.rectangle):
 
         # check reaching goal
         dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
+        if dist_to_goal < best_dist_go_goal:
+            early_stopping_counter = 0
+            best_dist_go_goal = dist_to_goal
+        else:
+            early_stopping_counter += 1
+            if early_stopping_counter == early_stopping_threshold:
+                print("Failed :(")
+                break
+
         if dist_to_goal <= config.robot_radius:
             print("Goal!!")
+            plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
+            if args.save: plt.savefig(intent_dir + f'I_{counter}.png')
             break
 
-    print("Done")
-    if show_animation:
-        plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
-        plt.pause(0.0001)
+    # if show_animation:
+    #     plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
+    #     plt.pause(0.0001)
 
     plt.show()
 
