@@ -485,7 +485,8 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
     # If dist_to_goal does not improve after %early_stopping_threshold number of steps, breaks out of planning.
     early_stopping_threshold = 20
     early_stopping_counter = 0
-    best_dist_go_goal = 99999
+    best_dist_to_goal = 99999
+    initial_dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
     while True:
         u, predicted_trajectory = dwa_control(x, config, goal, ob)
         x = motion(x, u, config.dt)  # simulate robot
@@ -509,9 +510,9 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
 
         # check reaching goal
         dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
-        if dist_to_goal < best_dist_go_goal:
+        if dist_to_goal + 0.001 < best_dist_to_goal:
             early_stopping_counter = 0
-            best_dist_go_goal = dist_to_goal
+            best_dist_to_goal = dist_to_goal
         else:
             early_stopping_counter += 1
             if early_stopping_counter == early_stopping_threshold:
@@ -520,14 +521,19 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
 
         if dist_to_goal <= config.robot_radius:
             print("Goal!!")
-            plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
-            if args.save: plt.savefig(intent_dir + f'I_{counter}.png')
             break
 
     # if show_animation:
     #     plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
     #     plt.pause(0.0001)
-
+    if args.save:
+        if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
+            plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
+        else: # failed plan returns empty map
+            plt.cla()
+            plt.plot(goal[0], goal[1], "xb")
+            plt.plot(ob[:, 0], ob[:, 1], "ok")
+        plt.savefig(intent_dir + f'I_{counter}.png')
     plt.show()
 
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
