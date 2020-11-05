@@ -37,13 +37,14 @@ DEFAULT_CAMERA_WIDTH = 640
 DEFAULT_CAMERA_HEIGHT = 480
 
 # Blue sky horizon color
-BLUE_SKY_COLOR = np.array([0.45, 0.82, 1])
+# BLUE_SKY_COLOR = np.array([0.45, 0.82, 1])
+BLUE_SKY_COLOR = np.array([0, 0, 1])  # blue for sky
 
 # Color meant to approximate interior walls
 WALL_COLOR = np.array([0.64, 0.71, 0.28])
 
 # Ground/floor color
-GROUND_COLOR = np.array([0.15, 0.15, 0.15])
+GROUND_COLOR = np.array([0, 0, 0])
 
 # Angle at which the camera is pitched downwards
 CAMERA_ANGLE = 15
@@ -340,6 +341,14 @@ class Simulator(gym.Env):
         ]
         self.ground_vlist = pyglet.graphics.vertex_list(4, ('v3f', verts))
 
+    def set_agent_info(self, pos, angle, verbose=False):
+        if verbose:
+            print("Updating current position and angle:")
+            print(f"position: {self.cur_pos} -> {pos}")
+            print(f"angle: {self.cur_angle} -> {angle}")
+        self.cur_pos = pos.copy()
+        self.cur_angle = angle
+
     def reset(self):
         """
         Reset the simulation at the start of a new episode
@@ -387,15 +396,16 @@ class Simulator(gym.Env):
         # XXX: diffuse is not used?
         diffuse = self._perturb([0.70, 0.70, 0.70], 0.3)
         from pyglet import gl
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, (gl.GLfloat * 4)(*light_pos))
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_AMBIENT, (gl.GLfloat * 4)(*ambient))
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_DIFFUSE, (gl.GLfloat * 4)(0.5, 0.5, 0.5, 1.0))
-        gl.glEnable(gl.GL_LIGHT0)
-        gl.glEnable(gl.GL_LIGHTING)
-        gl.glEnable(gl.GL_COLOR_MATERIAL)
+        # gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, (gl.GLfloat * 4)(*light_pos))
+        # gl.glLightfv(gl.GL_LIGHT0, gl.GL_AMBIENT, (gl.GLfloat * 4)(*ambient))
+        # gl.glLightfv(gl.GL_LIGHT0, gl.GL_DIFFUSE, (gl.GLfloat * 4)(0.5, 0.5, 0.5, 1.0))
+        # gl.glEnable(gl.GL_LIGHT0)
+        # gl.glEnable(gl.GL_LIGHTING)
+        # gl.glEnable(gl.GL_COLOR_MATERIAL)
 
         # Ground color
-        self.ground_color = self._perturb(GROUND_COLOR, 0.3)
+        # self.ground_color = self._perturb(GROUND_COLOR, 0.3)
+        self.ground_color = np.array([0, 0, 0])  # black color for ground
 
         # Distance between the robot's wheels
         self.wheel_dist = self._perturb(WHEEL_DIST)
@@ -420,7 +430,8 @@ class Simulator(gym.Env):
         for _ in range(0, 3 * numTris):
             p = self.np_random.uniform(low=[-20, -0.6, -20], high=[20, -0.3, 20], size=(3,))
             c = self.np_random.uniform(low=0, high=0.9)
-            c = self._perturb([c, c, c], 0.1)
+            # c = self._perturb([c, c, c], 0.1)
+            c = np.array([0, 0, 0]) # black - don't want junk on the floor
             verts += [p[0], p[1], p[2]]
             colors += [c[0], c[1], c[2]]
         import pyglet
@@ -438,7 +449,7 @@ class Simulator(gym.Env):
         # Randomize object parameters
         for obj in self.objects:
             # Randomize the object color
-            obj.color = self._perturb([1, 1, 1], 0.3)
+            # obj.color = self._perturb([1, 1, 1], 0.3)
 
             # Randomize whether the object is visible or not
             if obj.optional and self.domain_rand:
