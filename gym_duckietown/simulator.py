@@ -340,6 +340,14 @@ class Simulator(gym.Env):
         ]
         self.ground_vlist = pyglet.graphics.vertex_list(4, ('v3f', verts))
 
+    def set_agent_info(self, pos, angle, verbose=False):
+        if verbose:
+            print("Updating current position and angle:")
+            print(f"position: {self.cur_pos} -> {pos}")
+            print(f"angle: {self.angle} -> {angle}")
+        self.cur_pos = pos.copy()
+        self.cur_angle = angle
+
     def reset(self):
         """
         Reset the simulation at the start of a new episode
