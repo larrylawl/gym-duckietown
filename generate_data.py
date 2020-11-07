@@ -467,6 +467,19 @@ def plot_robot(x, y, yaw, config):  # pragma: no cover
                         np.array([np.cos(yaw), np.sin(yaw)]) * config.robot_radius)
         plt.plot([x, out_x], [y, out_y], "-k")
 
+def plot_relative_to_agent(dist, xi):
+    plt.xlim([xi[0] - dist, xi[0] + dist]) 
+    plt.ylim([xi[1] - dist, xi[1] + dist])
+
+def plot_initial_positions(xi, goal, ob):
+    plt.plot(xi[0], xi[1], "xr")
+    plt.plot(goal[0], goal[1], "xb")
+    plt.plot(ob[:, 0], ob[:, 1], "ok")
+    plot_robot(xi[0], xi[1], xi[2], config)
+    plot_arrow(xi[0], xi[1], xi[2])
+    plt.axis("equal")
+    plt.grid(True)
+    plt.pause(0.0001)
 
 def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
     """
@@ -488,6 +501,7 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
     w = (Vr - Vl) / l
     # initial state [x(m), y(m), yaw(rad), v(m/s), omega/angular velocity(rad/s)]
     x = np.array([px, pz, yaw, v, w])
+    xi = np.array([px, pz, yaw, v, w]) # stores initial
     # print(f"[px, pz, yaw, v, w]: {x}")
     # goal position [x(m), y(m)]
     goal = np.array([gx, gy])
@@ -547,22 +561,12 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
 
         if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
             plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
-        else: # failed plan shows initial location. TODO: change to current perspective
+            plot_initial_positions(xi, goal, ob)
+        else: # failed plan shows initial location. 
             plt.cla()
-            plt.plot(px, pz, "xr")
-            plt.plot(goal[0], goal[1], "xb")
-            plt.plot(ob[:, 0], ob[:, 1], "ok")
-            plot_robot(px, pz, yaw, config)
-            plot_arrow(px, pz, yaw)
-            plt.axis("equal")
-            plt.grid(True)
-            plt.pause(0.0001)
-
+            plot_initial_positions(xi, goal, ob)
         
-        # TODO: abstract as function
-        th = 0.75
-        plt.xlim([x[0] - th, x[0] + th]) # TODO: change to be variable
-        plt.ylim([x[1] - th, x[1] + th])
+        plot_relative_to_agent(0.75, xi)
         
         plt.axis('off')
         fig = plt.gcf()
