@@ -142,6 +142,10 @@ env.unwrapped.window.push_handlers(key_handler)
     #         plan_counter += 1
     # return result
         
+def did_move():
+    action = env.get_agent_info()['Simulator']['action']
+    return action[0] != 0.0 or action[1] != 0.0
+
 
 # calls planning every %plan_freq steps
 plan_freq = 100
@@ -154,12 +158,12 @@ def update(dt):
     """
     
     global plan_counter
-    action = env.get_agent_info()['Simulator']['action']
     plan = plan_counter == plan_freq
+    moved = did_move()
     if plan:
         plan_counter = 0
         dwa()
-    elif action[0] != 0.0 or action[1] != 0.0: # only increase plan counter if you move
+    elif moved: # only increase plan counter if you move
         plan_counter += 1
 
     action = np.array([0.0, 0.0])
@@ -197,8 +201,9 @@ def update(dt):
     else:
         env.render()
 
-    if args.save:
+    if args.save and (moved or plan):
         global counter 
+        print(f'counter:{counter}')
 
         im = Image.fromarray(obs)
 
@@ -537,14 +542,15 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
     #     plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
     #     plt.pause(0.0001)
     if args.save:
+        plt.figure(figsize=(1.12, 1.12))
         if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
             plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
         else: # failed plan returns empty map
             plt.cla()
             plt.plot(goal[0], goal[1], "xb")
             plt.plot(ob[:, 0], ob[:, 1], "ok")
-        F = plt.gcf()
-        F.set_size_inches(1.12, 1.12, forward = True) # inet img input dimensions in inches
+        # F = plt.gcf()
+        # F.set_size_inches(1.12, 1.12, forward = True) # inet img input dimensions in inches
         plt.savefig(intent_dir + f'I_{counter}.png')
     plt.show()
 
