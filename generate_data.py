@@ -16,6 +16,9 @@ import gym_duckietown
 from gym_duckietown.envs import DuckietownEnv
 from gym_duckietown.wrappers import UndistortWrapper
 from gym_duckietown.simulator import ROBOT_LENGTH, ROBOT_WIDTH
+from shutil import copyfile
+import glob
+import os
 
 # from experiments.utils import save_img
 
@@ -53,9 +56,9 @@ parser.add_argument('--domain-rand', action='store_true', help='enable domain ra
 parser.add_argument('--frame-skip', default=1, type=int, help='number of frames to skip')
 parser.add_argument('--seed', default=1, type=int, help='seed')
 parser.add_argument('--save', default=False, type=str2bool, help='Saves datasets.')
-parser.add_argument('--image_dir', default="./images/", type=str, help='Directory to save images.')
-parser.add_argument('--action_dir', default="./actions/", type=str, help='Directory to save actions.')
-parser.add_argument('--intent_dir', default="./intentions/", type=str, help='Directory to save intentions.')
+parser.add_argument('--image_dir', default="./data/images/", type=str, help='Directory to save images.')
+parser.add_argument('--action_dir', default="./data/actions/", type=str, help='Directory to save actions.')
+parser.add_argument('--intent_dir', default="./data/intentions/", type=str, help='Directory to save intentions.')
 args = parser.parse_args()
 
 if args.env_name and args.env_name.find('Duckietown') != -1:
@@ -126,26 +129,22 @@ def on_key_press(symbol, modifiers):
 key_handler = key.KeyStateHandler()
 env.unwrapped.window.push_handlers(key_handler)
 
+# def should_plan():
+    # Replans after %plan_freq number of steps. Note that no steps are taken when stationary.
+    # return plan_counter == plan_freq
+        # action taken
+        # global plan_counter
+    #     if plan_counter == plan_freq:
+    #         # plan_counter = 0
+    #         result = True
+    #     else:
+    #         plan_counter += 1
+    # return result
+        
+
 # calls planning every %plan_freq steps
 plan_freq = 100
 plan_counter = plan_freq
-
-def should_plan():
-    # Replans after %plan_freq number of steps. Note that no steps are taken when stationary.
-
-    result = False
-    info = env.get_agent_info()['Simulator']
-    action = info['action']
-    if action[0] != 0.0 or action[1] != 0.0:
-        # action taken
-        global plan_counter
-        if plan_counter == plan_freq:
-            plan_counter = 0
-            result = True
-        else:
-            plan_counter += 1
-    return result
-        
 
 def update(dt):
     """
@@ -153,7 +152,13 @@ def update(dt):
     movement/stepping and redrawing
     """
     
-    if should_plan(): dwa()
+    global plan_counter
+    action = env.get_agent_info()['Simulator']['action']
+    if plan_counter == plan_freq :
+        plan_counter = 0
+        dwa()
+    elif action[0] != 0.0 or action[1] != 0.0: # only increase plan counter if you move
+        plan_counter += 1
 
     action = np.array([0.0, 0.0])
 
@@ -200,12 +205,16 @@ def update(dt):
         # from random import randint
         image_filename = f'X_{counter}.png'
         action_filename = f'Y_{counter}.npy'
+        intention_filename=f'I_{counter}.png'
         im.save(image_dir + image_filename)
         np.save(action_dir + action_filename, action)
-
-        # if should_plan():
-        #     # uses new planning image
-        #     plt.savefig(intent_dir + f'I_{counter}.png')
+        if not os.path.exists(intent_dir + intention_filename):
+            # if intention image not present, take previous intention image
+            # TODO: softlink instead of duplicating same image to save space
+            print(f"path: {intent_dir + intention_filename} ")
+            prev_count = counter - 1
+            print(f"prev_count: {prev_count}")
+            copyfile(intent_dir + f'I_{prev_count}.png', intent_dir + f'I_{counter}.png')
         counter += 1
 
 show_animation = True #set
@@ -314,11 +323,11 @@ def calc_dynamic_window(x, config):
           x[4] + config.max_delta_yaw_rate * config.dt]
 
     #  [v_min, v_max, yaw_rate_min, yaw_rate_max]
-    print(f"vs[0]: {Vs[0]}")
-    print(f"vd[0]: {Vd[0]}")
+    # print(f"vs[0]: {Vs[0]}")
+    # print(f"vd[0]: {Vd[0]}")
     dw = [max(Vs[0], Vd[0]), min(Vs[1], Vd[1]),
           max(Vs[2], Vd[2]), min(Vs[3], Vd[3])]
-    print(f"dw: {dw}")
+    # print(f"dw: {dw}")
 
     return dw
 
