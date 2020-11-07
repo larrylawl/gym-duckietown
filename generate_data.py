@@ -547,15 +547,17 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
 
         if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
             plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
-        else: # failed plan shows current location only. TODO: change to current perspective
+        else: # failed plan shows initial location. TODO: change to current perspective
             plt.cla()
-            plt.plot(x[0], x[1], "xr")
+            plt.plot(px, pz, "xr")
             plt.plot(goal[0], goal[1], "xb")
             plt.plot(ob[:, 0], ob[:, 1], "ok")
-            plot_robot(x[0], x[1], x[2], config)
-            plot_arrow(x[0], x[1], x[2])
+            plot_robot(px, pz, yaw, config)
+            plot_arrow(px, pz, yaw)
             plt.axis("equal")
             plt.grid(True)
+            plt.pause(0.0001)
+
         
         # TODO: abstract as function
         th = 0.75
