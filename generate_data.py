@@ -16,6 +16,7 @@ import gym_duckietown
 from gym_duckietown.envs import DuckietownEnv
 from gym_duckietown.wrappers import UndistortWrapper
 from gym_duckietown.simulator import ROBOT_LENGTH, ROBOT_WIDTH
+from PIL import Image
 from shutil import copyfile
 import glob
 import os
@@ -182,7 +183,6 @@ def update(dt):
 
     if key_handler[key.RETURN]:
         # TODELETE: print('key.RETURN pressed!')
-        from PIL import Image
         im = Image.fromarray(obs)
 
         im.save('screen.png')
@@ -199,13 +199,13 @@ def update(dt):
     if args.save:
         global counter 
 
-        from PIL import Image
         im = Image.fromarray(obs)
 
         # from random import randint
         image_filename = f'X_{counter}.png'
         action_filename = f'Y_{counter}.npy'
         intention_filename=f'I_{counter}.png'
+        im = im.resize(size = (224, 224))
         im.save(image_dir + image_filename)
         np.save(action_dir + action_filename, action)
         if not os.path.exists(intent_dir + intention_filename):
@@ -542,6 +542,8 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
             plt.cla()
             plt.plot(goal[0], goal[1], "xb")
             plt.plot(ob[:, 0], ob[:, 1], "ok")
+        F = plt.gcf()
+        F.set_size_inches(1.12, 1.12, forward = True) # inet img input dimensions in inches
         plt.savefig(intent_dir + f'I_{counter}.png')
     plt.show()
 
