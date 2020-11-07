@@ -155,7 +155,8 @@ def update(dt):
     
     global plan_counter
     action = env.get_agent_info()['Simulator']['action']
-    if plan_counter == plan_freq :
+    plan = plan_counter == plan_freq
+    if plan:
         plan_counter = 0
         dwa()
     elif action[0] != 0.0 or action[1] != 0.0: # only increase plan counter if you move
@@ -208,12 +209,12 @@ def update(dt):
         im = im.resize(size = (224, 224))
         im.save(image_dir + image_filename)
         np.save(action_dir + action_filename, action)
-        if not os.path.exists(intent_dir + intention_filename):
-            # if intention image not present, take previous intention image
+        if not plan:
+            # take previous intention image
             # TODO: softlink instead of duplicating same image to save space
-            print(f"path: {intent_dir + intention_filename} ")
+            # print(f"path: {intent_dir + intention_filename} ")
             prev_count = counter - 1
-            print(f"prev_count: {prev_count}")
+            # print(f"prev_count: {prev_count}")
             copyfile(intent_dir + f'I_{prev_count}.png', intent_dir + f'I_{counter}.png')
         counter += 1
 
