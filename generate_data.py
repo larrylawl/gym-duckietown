@@ -544,27 +544,32 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
     #     plt.pause(0.0001)
     if args.save:
         # plt.figure(figsize=(1.12, 1.12)) # fixed size before plotting
-        
-        # rotate plot to be egocentric
-        base = plt.gca().transData
-        rot = transforms.Affine2D().rotate(math.pi)
 
         if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
-            # plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
             plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
-        else: # failed plan returns empty map
+        else: # failed plan shows current location only. TODO: change to current perspective
             plt.cla()
+            plt.plot(x[0], x[1], "xr")
             plt.plot(goal[0], goal[1], "xb")
             plt.plot(ob[:, 0], ob[:, 1], "ok")
-        # fig = plt.gcf()
-        # fig.set_size_inches(1.12, 1.12, forward = True) # inet img input dimensions in inches
+            plot_robot(x[0], x[1], x[2], config)
+            plot_arrow(x[0], x[1], x[2])
+            plt.axis("equal")
+            plt.grid(True)
+        
+        # TODO: abstract as function
+        th = 0.75
+        plt.xlim([x[0] - th, x[0] + th]) # TODO: change to be variable
+        plt.ylim([x[1] - th, x[1] + th])
+        
+        plt.axis('off')
+        fig = plt.gcf()
+        fig.set_size_inches(1.12, 1.12, forward = True) # inet size
         plt.savefig(intent_dir + f'I_{counter}.png')
 
         # TODO: rotate internally with pyplot instead
         im = Image.open(intent_dir + f'I_{counter}.png')
         im.rotate(90 - (yaw * 180 / math.pi)).save(intent_dir + f'I_{counter}.png')
-        # im.rotate(yaw * 180 / math.pi)
-    # plt.show()
 
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
