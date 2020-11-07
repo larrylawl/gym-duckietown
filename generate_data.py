@@ -34,7 +34,8 @@ author: Atsushi Sakai (@Atsushi_twi), Göktuğ Karakaşlı
 import math
 from enum import Enum
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt, transforms
 import numpy as np
 
 def str2bool(v):
@@ -158,9 +159,9 @@ def update(dt):
     """
     
     global plan_counter
-    plan = plan_counter == plan_freq
+    planned = plan_counter == plan_freq
     moved = did_move()
-    if plan:
+    if planned:
         plan_counter = 0
         dwa()
     elif moved: # only increase plan counter if you move
@@ -201,7 +202,7 @@ def update(dt):
     else:
         env.render()
 
-    if args.save and (moved or plan):
+    if args.save and (moved or planned):
         global counter 
         print(f'counter:{counter}')
 
@@ -214,7 +215,7 @@ def update(dt):
         im = im.resize(size = (224, 224))
         im.save(image_dir + image_filename)
         np.save(action_dir + action_filename, action)
-        if not plan:
+        if not planned:
             # take previous intention image
             # TODO: softlink instead of duplicating same image to save space
             # print(f"path: {intent_dir + intention_filename} ")
@@ -479,7 +480,7 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
     # print(f'Agent Info: {info}')
     px, _, pz = info['cur_pos'] 
     pz *= -1 # flip y-axis to fit duckytown's coordinates 
-    yaw = env.cur_angle
+    yaw = info['cur_angle']
     v = info['robot_speed']
     # Formula for angular velocity: http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
     Vl, Vr = info['wheel_velocities']
@@ -542,17 +543,28 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
     #     plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
     #     plt.pause(0.0001)
     if args.save:
-        plt.figure(figsize=(1.12, 1.12))
+        # plt.figure(figsize=(1.12, 1.12)) # fixed size before plotting
+        
+        # rotate plot to be egocentric
+        base = plt.gca().transData
+        rot = transforms.Affine2D().rotate(math.pi)
+
         if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
+            # plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
             plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
         else: # failed plan returns empty map
             plt.cla()
             plt.plot(goal[0], goal[1], "xb")
             plt.plot(ob[:, 0], ob[:, 1], "ok")
-        # F = plt.gcf()
-        # F.set_size_inches(1.12, 1.12, forward = True) # inet img input dimensions in inches
+        # fig = plt.gcf()
+        # fig.set_size_inches(1.12, 1.12, forward = True) # inet img input dimensions in inches
         plt.savefig(intent_dir + f'I_{counter}.png')
-    plt.show()
+
+        # TODO: rotate internally with pyplot instead
+        im = Image.open(intent_dir + f'I_{counter}.png')
+        im.rotate(90 - (yaw * 180 / math.pi)).save(intent_dir + f'I_{counter}.png')
+        # im.rotate(yaw * 180 / math.pi)
+    # plt.show()
 
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
