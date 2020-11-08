@@ -625,6 +625,32 @@ class Simulator(gym.Env):
             coords = map_data['goal_tile']
             self.goal_tile = self._get_tile(*coords)
             assert self.goal_tile in self.drivable_tiles
+        
+        # goal tile: (5, 4)
+        self.min_drivable_tiles_to_goal = { 
+            (1, 1): 9,
+            (2, 1): 8,
+            (3, 1): 7,
+            (4, 1): 6,
+            (5, 1): 5,
+            (6, 1): 4,
+            (6, 2): 3,
+            (6, 3): 2,
+            (6, 4): 1,
+            (5, 4): 0,
+            (1, 2): 8,
+            (1, 3): 7,
+            (1, 4): 6,
+            (1, 5): 5,
+            (2, 5): 4,
+            (3, 5): 3,
+            (4, 5): 2,
+            (5, 5): 1,
+            (3, 2): 6,
+            (3, 3): 5,
+            (3, 4): 4,
+            (2, 3): 6
+        }
 
     def _load_objects(self, map_data):
         # Create the objects array
@@ -1368,7 +1394,15 @@ class Simulator(gym.Env):
         d = self._compute_done_reward()
         misc['Simulator']['msg'] = d.done_why
 
-        return obs, d.reward, d.done, misc
+        loss = self._compute_loss()
+
+        return obs, d.reward, d.done, misc, loss
+
+    def _compute_loss(self):
+        """ Number of minimum drivable tiles away from goal state
+        """
+        cur_tile = self.get_agent_info()['Simulator']['tile_coords']
+        return self.min_drivable_tiles_to_goal[tuple(cur_tile)]
 
     def _compute_done_reward(self) -> DoneRewardInfo:
         # If the agent is not in a valid pose (on drivable tiles)

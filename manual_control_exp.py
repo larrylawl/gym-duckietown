@@ -92,7 +92,7 @@ def update(dt):
     agent_tile = env.get_agent_info()['Simulator']['tile_coords']
     if agent_tile == [*env.goal_tile['coords']]:
         print("Congratulations! You are a DuckieTown Master!")
-        env.reset()
+        # env.reset()
 
     action = np.array([0.0, 0.0])
 
@@ -111,8 +111,8 @@ def update(dt):
     if key_handler[key.LSHIFT]:
         action *= 1.5
 
-    obs, reward, done, info = env.step(action)
-    print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
+    obs, reward, done, info, loss = env.step(action)
+    print('step_count = %s, reward=%.3f, loss=%i' % (env.unwrapped.step_count, reward, loss))
 
     if key_handler[key.RETURN]:
         from PIL import Image
