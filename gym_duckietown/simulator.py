@@ -618,6 +618,13 @@ class Simulator(gym.Env):
         if 'start_tile' in map_data:
             coords = map_data['start_tile']
             self.start_tile = self._get_tile(*coords)
+        
+        # Get the goal tile from the map, if specified
+        self.goal_tile = None
+        if 'goal_tile' in map_data:
+            coords = map_data['goal_tile']
+            self.goal_tile = self._get_tile(*coords)
+            assert self.goal_tile in self.drivable_tiles
 
     def _load_objects(self, map_data):
         # Create the objects array
