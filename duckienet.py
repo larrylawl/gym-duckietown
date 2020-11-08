@@ -2,29 +2,41 @@
 # manual
 
 """
-This script allows you to manually control the simulator or Duckiebot
-using the keyboard arrows.
+Script to run IntentionNet together with BiSeNet.
+Manual control is allowed too.
 """
 
 import sys
+import os
 import argparse
 import pyglet
 from pyglet.window import key
 import numpy as np
 import gym
 import gym_duckietown
+
+
 from gym_duckietown.envs import DuckietownEnv
 from gym_duckietown.wrappers import UndistortWrapper
 from PIL import Image
 
-from duckienet_config import inet_cfg
+
+from duckienet_config import inet_cfg, bisenet_cfg
 
 sys.path.append('/home/yuanbo/projects/2309/intention_net/intention_net')
 from control.policy import Policy
 from keras.preprocessing.image import load_img, img_to_array
 
+# Not sure why but this import must be done after keras import...
+import torch
+import torch.nn as nn
+
+sys.path.append('/home/yuanbo/projects/2309/bisenet')
+from lib.models import BiSeNetV2
+import lib.transform_cv2 as T
+
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--env-name', default=None)
 parser.add_argument('--map-name', default='udem1')
 parser.add_argument('--distortion', default=False, action='store_true')
 parser.add_argument('--draw-curve', action='store_true', help='draw the lane following curve')
@@ -34,18 +46,15 @@ parser.add_argument('--frame-skip', default=1, type=int, help='number of frames 
 parser.add_argument('--seed', default=1, type=int, help='seed')
 args = parser.parse_args()
 
-if args.env_name and args.env_name.find('Duckietown') != -1:
-    env = DuckietownEnv(
-        seed = args.seed,
-        map_name = args.map_name,
-        draw_curve = args.draw_curve,
-        draw_bbox = args.draw_bbox,
-        domain_rand = args.domain_rand,
-        frame_skip = args.frame_skip,
-        distortion = args.distortion,
-    )
-else:
-    env = gym.make(args.env_name)
+env = DuckietownEnv(
+    seed = args.seed,
+    map_name = args.map_name,
+    draw_curve = args.draw_curve,
+    draw_bbox = args.draw_bbox,
+    domain_rand = args.domain_rand,
+    frame_skip = args.frame_skip,
+    distortion = args.distortion,
+)
 
 env.reset()
 env.render()
@@ -83,7 +92,22 @@ env.unwrapped.window.push_handlers(key_handler)
 # Load inet model
 num_intentions = 4
 num_control = 2
-policy = Policy(inet_cfg['intention_mode'], inet_cfg['input_frame'], num_control, inet_cfg['model_dir'], num_intentions)
+inet = Policy(inet_cfg['intention_mode'], inet_cfg['input_frame'], num_control, inet_cfg['model_dir'], num_intentions)
+
+
+torch.set_grad_enabled(False)
+
+# Load bisenet model
+bisenet = BiSeNetV2(bisenet_cfg['n_classes'])
+bisenet.load_state_dict(torch.load(bisenet_cfg['weights_path'], map_location='cpu'))
+bisenet.eval()
+bisenet.cuda()
+
+# prepare data (for bisenet)
+to_tensor = T.ToTensor(
+    mean=(0.3257, 0.3690, 0.3223), # city, rgb
+    std=(0.2112, 0.2148, 0.2115),
+)
 
 next_action = np.array([0.0, 0.0])
 
@@ -111,16 +135,30 @@ def update(dt):
     obs, reward, done, info = env.step(action)
     # print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
 
-    # From obs, intention and speed, derive next action using IntentionNet
-    # next_action = 
+    ###########
+    # BISENET #
+    ###########
+    # Generate segmentation labels from bisenet
+    im = to_tensor(dict(im=obs, lb=None))['im'].unsqueeze(0).cuda()
+    labels = bisenet(im)[0].argmax(dim=1).squeeze().detach().cpu().numpy()
 
-    # Model inputs
-    img = Image.fromarray(obs).resize(size=(224, 224))
-    img = img_to_array(img)
+
+    #################
+    # INTENTION-NET #
+    #################
+    labels = Image.fromarray(labels, 'L').resize(size=(224, 224))
+    labels = img_to_array(labels)
+
+    # INet only accepts RGB images i.e. input needs 3 channels
+    # However, predicted labels only has a single channel
+    # Hacky fix: duplicate along the single channel to get 3 input channels
+    labels = np.repeat(labels, 3, axis=2)
+ 
     intention = img_to_array(load_img(f"{inet_cfg['data_dir']}/intentions/I_0.png", target_size=(224, 224)))
     speed = np.array([env.get_agent_info()['Simulator']['robot_speed']])
 
-    next_action = policy.predict_control(img, intention, speed).squeeze()
+    # From labels, intention and speed, derive next action using IntentionNet
+    next_action = inet.predict_control(labels, intention, speed, segmented=True).squeeze()
     # print("Predicted control: ", next_action)
 
     if key_handler[key.RETURN]:
@@ -129,7 +167,7 @@ def update(dt):
         im.save('screen.png')
 
     if done:
-        print('done!')
+        print('Crashed.')
         env.reset()
 
     if top_down:

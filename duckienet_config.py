@@ -4,3 +4,8 @@ inet_cfg = dict(
     intention_mode="LPE_NO_SIAMESE",
     input_frame="NORMAL"
 )
+
+bisenet_cfg = dict(
+    n_classes=5,
+    weights_path="/home/yuanbo/projects/2309/bisenet/res/model_final.pth"
+)
