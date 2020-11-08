@@ -146,8 +146,8 @@ def update(dt):
     #################
     # INTENTION-NET #
     #################
-    labels = Image.fromarray(labels, 'L').resize(size=(224, 224))
-    labels = img_to_array(labels)
+    labels = labels.astype(np.uint8)
+    labels = Image.fromarray(labels).resize(size=(224, 224))
 
     # INet only accepts RGB images i.e. input needs 3 channels
     # However, predicted labels only has a single channel
