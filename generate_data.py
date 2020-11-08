@@ -149,7 +149,7 @@ def did_move():
 
 
 # calls planning every %plan_freq steps
-plan_freq = 100
+plan_freq = 20
 plan_counter = plan_freq
 
 def update(dt):
@@ -257,7 +257,7 @@ class Config:
         self.v_resolution = 0.01  # [m/s]
         self.yaw_rate_resolution = 0.1 * math.pi / 180.0  # [rad/s]
         self.dt = 0.1  # [s] Time tick for motion prediction
-        self.predict_time = 3.0  # [s]
+        self.predict_time = 0.5  # [s]
         self.to_goal_cost_gain = 0.15
         self.speed_cost_gain = 1.0
         self.obstacle_cost_gain = 1.0
@@ -273,7 +273,20 @@ class Config:
         self.robot_length = ROBOT_LENGTH  # [m] for collision check
         # obstacles [x(m) y(m), ....]
         # obstacles [ [(x, y), (x, y) ], ...] assumes obstacles are lines
-        ob_cood = [ [(4, -1.5), (5.5, -1.5)] ]  #TODO: reflect about x-axis
+        # ob_cood = [ [(4, -1.5), (5.5, -1.5)] ]  #TODO: reflect about x-axis
+        ob_intervals = [ # borders
+            [[0,0], [7,0]],
+            [[0,-6], [0,0]],
+            [[7,-6], [7,0]],
+            [[0,-6], [7,-6]],
+            [[6,-5], [6,-5]],
+            [[2,-2], [2,-2]], # within
+            [[2,-4], [2,-4]],
+            [[4,-4], [4,-2]],
+            [[4,-2], [5,-2]],
+            [[5,-3], [5,-2]],
+            [[4,-3], [5,-3]],
+        ]
         # ob_cood = []
         # for tile in env.obstacle_tiles:
         #     # reflect about x-axis to fit duckietown's map
@@ -286,7 +299,7 @@ class Config:
         #     # for i in range(freq):
         #     #     for j in range(freq):
         #     #         ob_cood.append((x + i/freq, -y - j/freq))
-        self.ob = np.array(ob_cood)
+        self.ob = np.array(ob_intervals)
 
     @property
     def robot_type(self):
@@ -436,12 +449,15 @@ def calc_obstacle_cost(trajectory, ob, config):
         p1 = o[0]
         p2 = o[1]
         for t in trajectory:
-            p3 = (t[0], t[1])
-            # print(f"p1: {p1}, p2: {p2}, p3: {p3}")
-            p = projection(p1, p2, p3)
-            # print(f"p:{p}")
-            r.append(get_sld(p, p3))
-            # print(f"p1: {p1}, p2: {p2}, p3: {p3}, r: {r}")
+            if np.array_equal(p1, p2):
+                r.append(get_sld(p, p3))
+            else:
+                p3 = (t[0], t[1])
+                # print(f"p1: {p1}, p2: {p2}, p3: {p3}")
+                p = projection(p1, p2, p3)
+                # print(f"p:{p}")
+                r.append(get_sld(p, p3))
+                # print(f"p1: {p1}, p2: {p2}, p3: {p3}, r: {r}")
     r = np.array(r)
     
     # ox = ob[:, 0]
@@ -563,11 +579,12 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.circle):
     ob = config.ob
 
     # If dist_to_goal does not improve after %early_stopping_threshold number of steps, breaks out of planning.
-    early_stopping_threshold = 40 # SET THIS
+    planning_threshold = 20
+    early_stopping_threshold = 20 # SET THIS
     early_stopping_counter = 0
     best_dist_to_goal = 99999
     initial_dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
-    while True:
+    for i in range(planning_threshold):
         u, predicted_trajectory = dwa_control(x, config, goal, ob)
         x = motion(x, u, config.dt)  # simulate robot
         trajectory = np.vstack((trajectory, x))  # store state history
@@ -584,8 +601,9 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.circle):
             for o in ob:
                 p1 = o[0]
                 p2 = o[1]
-                print(f"p1: {p1}, p2: {p2}")
-                plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "k")
+                if np.array_equal(p1, p2): 
+                    plt.plot(p1[0], p1[1], "ok")
+                else: plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "k")
             # plt.plot([1, 4], "k")
             # iterate through obstacles
             # if only one elt in it, it's a point
