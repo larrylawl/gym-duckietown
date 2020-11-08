@@ -63,6 +63,14 @@ parser.add_argument('--action_dir', default="./data/actions/", type=str, help='D
 parser.add_argument('--intent_dir', default="./data/intentions/", type=str, help='Directory to save intentions.')
 args = parser.parse_args()
 
+# SET THIS
+plan_freq = 40
+plan_counter = plan_freq
+show_animation = True
+planning_threshold = 20
+early_stopping_threshold = 10 # SET THIS
+early_stopping_counter = 0
+
 if args.env_name and args.env_name.find('Duckietown') != -1:
     env = DuckietownEnv(
         seed = args.seed,
@@ -147,11 +155,6 @@ def did_move():
     action = env.get_agent_info()['Simulator']['action']
     return action[0] != 0.0 or action[1] != 0.0
 
-
-# calls planning every %plan_freq steps
-plan_freq = 40
-plan_counter = plan_freq
-
 def update(dt):
     """
     This function is called at every frame to handle
@@ -223,8 +226,6 @@ def update(dt):
             # print(f"prev_count: {prev_count}")
             copyfile(intent_dir + f'I_{prev_count}.png', intent_dir + f'I_{counter}.png')
         counter += 1
-
-show_animation = True #set
 
 def dwa_control(x, config, goal, ob):
     """
@@ -407,12 +408,6 @@ def calc_control_and_trajectory(x, dw, config, goal, ob):
                     best_u[1] = -config.max_delta_yaw_rate
     return best_u, best_trajectory
 
-
-# def distance_from_point_to_line(p1, p2, p3):
-#     """ p3 is the point. p1 and p2 forms the line.
-#     """
-#     return np.abs(np.linalg.norm(np.cross(p2-p1, p1-p3))/np.linalg.norm(p2-p1))
-
 def projection(p1, p2, p3):
     """ p3 is the point. p1 and p2 forms the line.
     """
@@ -491,7 +486,6 @@ def calc_obstacle_cost(trajectory, ob, config):
     min_r = np.min(r)
     return 1.0 / min_r  # OK
 
-
 def calc_to_goal_cost(trajectory, goal):
     """
         calc to goal cost with angle difference
@@ -505,12 +499,10 @@ def calc_to_goal_cost(trajectory, goal):
 
     return cost
 
-
 def plot_arrow(x, y, yaw, length=0.5, width=0.1):  # pragma: no cover
     plt.arrow(x, y, length * math.cos(yaw), length * math.sin(yaw),
               head_length=width, head_width=width)
     plt.plot(x, y)
-
 
 def plot_robot(x, y, yaw, config):  # pragma: no cover
     if config.robot_type == RobotType.rectangle:
@@ -579,10 +571,6 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.circle):
     trajectory = np.array(x)
     ob = config.ob
 
-    # If dist_to_goal does not improve after %early_stopping_threshold number of steps, breaks out of planning.
-    planning_threshold = 20
-    early_stopping_threshold = 20 # SET THIS
-    early_stopping_counter = 0
     best_dist_to_goal = 99999
     initial_dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
     for i in range(planning_threshold):
@@ -627,7 +615,7 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.circle):
                 print("Failed :(")
                 break
 
-        if dist_to_goal <= config.robot_radius:
+        if dist_to_goal <= config.robot_radius + 0.5:
             print("Goal!!")
             break
 
