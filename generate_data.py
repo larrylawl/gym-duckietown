@@ -266,24 +266,26 @@ class Config:
 
         # if robot_type == RobotType.circle
         # Also used to check if goal is reached in both types
-        self.robot_radius = 1.0  # [m] for collision check
+        self.robot_radius = (ROBOT_WIDTH + ROBOT_LENGTH) / 4 # [m] for collision check
 
         # if robot_type == RobotType.rectangle
         self.robot_width = ROBOT_WIDTH  # [m] for collision check
         self.robot_length = ROBOT_LENGTH  # [m] for collision check
         # obstacles [x(m) y(m), ....]
-        ob_cood = []
-        for tile in env.obstacle_tiles:
-            # reflect about x-axis to fit duckietown's map
-            # e.g. duckietown's (2,3) coordinate is actually (2, -3)
-            (x, y) = tile['coords']
-            # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
-            ob_cood.append((x, -y))
+        # obstacles [ [(x, y), (x, y) ], ...] assumes obstacles are lines
+        ob_cood = [ [(4, -1.5), (5.5, -1.5)] ]  #TODO: reflect about x-axis
+        # ob_cood = []
+        # for tile in env.obstacle_tiles:
+        #     # reflect about x-axis to fit duckietown's map
+        #     # e.g. duckietown's (2,3) coordinate is actually (2, -3)
+        #     (x, y) = tile['coords']
+        #     # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
+        #     ob_cood.append((x, -y))
 
-            # freq = 5 # I can't connect the dots. So i'm plotting %freq number of discrete dots to mimick a continuous line.
-            # for i in range(freq):
-            #     for j in range(freq):
-            #         ob_cood.append((x + i/freq, -y - j/freq))
+        #     # freq = 5 # I can't connect the dots. So i'm plotting %freq number of discrete dots to mimick a continuous line.
+        #     # for i in range(freq):
+        #     #     for j in range(freq):
+        #     #         ob_cood.append((x + i/freq, -y - j/freq))
         self.ob = np.array(ob_cood)
 
     @property
@@ -392,17 +394,65 @@ def calc_control_and_trajectory(x, dw, config, goal, ob):
     return best_u, best_trajectory
 
 
+# def distance_from_point_to_line(p1, p2, p3):
+#     """ p3 is the point. p1 and p2 forms the line.
+#     """
+#     return np.abs(np.linalg.norm(np.cross(p2-p1, p1-p3))/np.linalg.norm(p2-p1))
+
+def projection(p1, p2, p3):
+    """ p3 is the point. p1 and p2 forms the line.
+    """
+
+    #distance between p1 and p2
+    l2 = get_sld(p1, p2)
+    if l2 == 0:
+        print('p1 and p2 are the same points')
+
+    #The line extending the segment is parameterized as p1 + t (p2 - p1).
+    #The projection falls where t = [(p3-p1) . (p2-p1)] / |p2-p1|^2
+
+    #if you need the point to project on line extention connecting p1 and p2
+    # t = np.sum((p3 - p1) * (p2 - p1)) / l2
+
+    #if you need to ignore if p3 does not project onto line segment
+    # if t > 1 or t < 0:
+    #     print('p3 does not project onto p1-p2 line segment')
+
+    #if you need the point to project on line segment between p1 and p2 or closest point of the line segment
+    t = max(0, min(1, np.sum((p3 - p1) * (p2 - p1)) / l2))
+
+    projection = p1 + t * (p2 - p1)
+    return projection
+
+def get_sld(p1, p2):
+    return np.sum((p1-p2)**2)
+
 def calc_obstacle_cost(trajectory, ob, config):
     """
     calc obstacle cost inf: collision
     """
-    ox = ob[:, 0]
-    oy = ob[:, 1]
-    dx = trajectory[:, 0] - ox[:, None]
-    dy = trajectory[:, 1] - oy[:, None]
-    r = np.hypot(dx, dy)
+    r = []
+    for o in ob:
+        p1 = o[0]
+        p2 = o[1]
+        for t in trajectory:
+            p3 = (t[0], t[1])
+            # print(f"p1: {p1}, p2: {p2}, p3: {p3}")
+            p = projection(p1, p2, p3)
+            # print(f"p:{p}")
+            r.append(get_sld(p, p3))
+            # print(f"p1: {p1}, p2: {p2}, p3: {p3}, r: {r}")
+    r = np.array(r)
+    
+    # ox = ob[:, 0]
+    # oy = ob[:, 1]
+    # print(f'trajectory: {trajectory}')
+    # dx = trajectory[:, 0] - ox[:, None]
+    # dy = trajectory[:, 1] - oy[:, None]
+    # r = np.hypot(dx, dy)
 
     if config.robot_type == RobotType.rectangle:
+        assert False, "Rectangle type not supported"
         yaw = trajectory[:, 2]
         rot = np.array([[np.cos(yaw), -np.sin(yaw)], [np.sin(yaw), np.cos(yaw)]])
         rot = np.transpose(rot, [2, 0, 1])
@@ -481,7 +531,7 @@ def plot_initial_positions(xi, goal, ob):
     plt.grid(True)
     plt.pause(0.0001)
 
-def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
+def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.circle):
     """
     Dynamic Window Approach. Plots the intention image. If successful, trajectory will be shown. Else, only map will be shown.
     
@@ -513,7 +563,7 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
     ob = config.ob
 
     # If dist_to_goal does not improve after %early_stopping_threshold number of steps, breaks out of planning.
-    early_stopping_threshold = 20
+    early_stopping_threshold = 40 # SET THIS
     early_stopping_counter = 0
     best_dist_to_goal = 99999
     initial_dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
@@ -529,9 +579,18 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.rectangle):
                 'key_release_event',
                 lambda event: [exit(0) if event.key == 'escape' else None])
             plt.plot(predicted_trajectory[:, 0], predicted_trajectory[:, 1], "-g")
-            plt.plot(x[0], x[1], "xr")
+            plt.plot(x[0], x[1], "xr") 
             plt.plot(goal[0], goal[1], "xb")
-            plt.plot(ob[:, 0], ob[:, 1], "ok")
+            for o in ob:
+                p1 = o[0]
+                p2 = o[1]
+                print(f"p1: {p1}, p2: {p2}")
+                plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "k")
+            # plt.plot([1, 4], "k")
+            # iterate through obstacles
+            # if only one elt in it, it's a point
+            # if pair, plot a line from the coordinates
+            # plt.plot(ob[:, 0], ob[:, 1], "ok")
             plot_robot(x[0], x[1], x[2], config)
             plot_arrow(x[0], x[1], x[2])
             plt.axis("equal")
