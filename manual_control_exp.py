@@ -16,6 +16,7 @@ import gym_duckietown
 from gym_duckietown.envs import DuckietownEnv
 from gym_duckietown.wrappers import UndistortWrapper
 from gym_duckietown.experiments import test
+import time
 
 # from experiments.utils import save_img
 
@@ -89,9 +90,9 @@ def update(dt):
     movement/stepping and redrawing
     """
 
-    agent_tile = env.get_agent_info()['Simulator']['tile_coords']
-    if agent_tile == [*env.goal_tile['coords']]:
-        print("Congratulations! You are a DuckieTown Master!")
+    # agent_tile = env.get_agent_info()['Simulator']['tile_coords']
+    # if agent_tile == [*env.goal_tile['coords']]:
+    #     print("Congratulations! You are a DuckieTown Master!")
         # env.reset()
 
     action = np.array([0.0, 0.0])
@@ -111,7 +112,7 @@ def update(dt):
     if key_handler[key.LSHIFT]:
         action *= 1.5
 
-    obs, reward, done, info, loss = env.step(action)
+    obs, reward, done, info, loss, done_code = env.step(action)
     print('step_count = %s, reward=%.3f, loss=%i' % (env.unwrapped.step_count, reward, loss))
 
     if key_handler[key.RETURN]:
@@ -122,6 +123,12 @@ def update(dt):
 
     if done:
         print('Done!')
+        success = False
+        if done_code == 'finished':
+            success = True
+        end = time.time()
+        time_taken = end - start
+        log(success, reward, loss, time_taken)
         env.reset()
 
     if top_down:
@@ -129,9 +136,20 @@ def update(dt):
     else:
         env.render()
 
+def log(success, reward, loss, time_taken):
+    import datetime, os
+    if os.path.exists("log.txt"):
+        append_write = 'a'
+    else:
+        append_write = 'w'
+    text_file = open("log.txt", append_write)
+    text_file.write(f'{datetime.datetime.now()}: success: {success}, reward: {reward}, loss: {loss}, time_taken: {time_taken}.\n')
+    text_file.close()
+
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
 # Enter main event loop
+start = time.time()
 pyglet.app.run()
 
 env.close()

@@ -1396,7 +1396,7 @@ class Simulator(gym.Env):
 
         loss = self._compute_loss()
 
-        return obs, d.reward, d.done, misc, loss
+        return obs, d.reward, d.done, misc, loss, d.done_code
 
     def _compute_loss(self):
         """ Number of minimum drivable tiles away from goal state

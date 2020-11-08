@@ -72,7 +72,7 @@ class DuckietownEnv(Simulator):
 
         vels = np.array([u_l_limited, u_r_limited])
 
-        obs, reward, done, info, loss = Simulator.step(self, vels)
+        obs, reward, done, info, loss, done_code = Simulator.step(self, vels)
         mine = {}
         mine['k'] = self.k
         mine['gain'] = self.gain
@@ -81,7 +81,7 @@ class DuckietownEnv(Simulator):
         mine['omega_r'] = omega_r
         mine['omega_l'] = omega_l
         info['DuckietownEnv'] = mine
-        return obs, reward, done, info, loss
+        return obs, reward, done, info, loss, done_code
 
 
 class DuckietownLF(DuckietownEnv):
