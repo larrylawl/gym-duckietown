@@ -49,7 +49,6 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--env-name', default=None)
 parser.add_argument('--map-name', default='udem1')
 parser.add_argument('--distortion', default=False, action='store_true')
 parser.add_argument('--draw-curve', action='store_true', help='draw the lane following curve')
@@ -57,32 +56,30 @@ parser.add_argument('--draw-bbox', action='store_true', help='draw collision det
 parser.add_argument('--domain-rand', action='store_true', help='enable domain randomization')
 parser.add_argument('--frame-skip', default=1, type=int, help='number of frames to skip')
 parser.add_argument('--seed', default=1, type=int, help='seed')
-parser.add_argument('--save', default=False, type=str2bool, help='Saves datasets.')
+parser.add_argument('--save', action='store_true', help='Saves datasets.')
 parser.add_argument('--image_dir', default="./data/images/", type=str, help='Directory to save images.')
 parser.add_argument('--action_dir', default="./data/actions/", type=str, help='Directory to save actions.')
 parser.add_argument('--intent_dir', default="./data/intentions/", type=str, help='Directory to save intentions.')
+parser.add_argument('--counter-start', default=0, type=int, help='Saved image filenames start from this number')
 args = parser.parse_args()
 
 # SET THIS
-plan_freq = 40
+plan_freq = 20
 plan_counter = plan_freq
 show_animation = True
-planning_threshold = 20
-early_stopping_threshold = 10 # SET THIS
+planning_threshold = 40
+early_stopping_threshold = planning_threshold - 10
 early_stopping_counter = 0
 
-if args.env_name and args.env_name.find('Duckietown') != -1:
-    env = DuckietownEnv(
-        seed = args.seed,
-        map_name = args.map_name,
-        draw_curve = args.draw_curve,
-        draw_bbox = args.draw_bbox,
-        domain_rand = args.domain_rand,
-        frame_skip = args.frame_skip,
-        distortion = args.distortion,
-    )
-else:
-    env = gym.make(args.env_name)
+env = DuckietownEnv(
+    seed = args.seed,
+    map_name = args.map_name,
+    draw_curve = args.draw_curve,
+    draw_bbox = args.draw_bbox,
+    domain_rand = args.domain_rand,
+    frame_skip = args.frame_skip,
+    distortion = args.distortion,
+)
 
 print(args)
 if args.save:
@@ -91,7 +88,7 @@ if args.save:
     image_dir = args.image_dir
     action_dir = args.action_dir
     intent_dir = args.intent_dir
-    counter = 0
+    counter = args.counter_start
     # Ensures image and action directory are specified
     assert image_dir is not None
     assert action_dir is not None
@@ -177,9 +174,9 @@ def update(dt):
     if key_handler[key.DOWN]:
         action = np.array([-0.44, 0])
     if key_handler[key.LEFT]:
-        action = np.array([0.35, +1])
+        action = np.array([0.15, +1])
     if key_handler[key.RIGHT]:
-        action = np.array([0.35, -1])
+        action = np.array([0.15, -1])
     if key_handler[key.SPACE]:
         action = np.array([0, 0])
 
@@ -215,7 +212,7 @@ def update(dt):
         image_filename = f'X_{counter}.png'
         action_filename = f'Y_{counter}.npy'
         intention_filename=f'I_{counter}.png'
-        im = im.resize(size = (224, 224))
+        # im = im.resize(size = (224, 224))
         im.save(image_dir + image_filename)
         np.save(action_dir + action_filename, action)
         if not planned:
