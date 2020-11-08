@@ -121,7 +121,7 @@ def update(dt):
         im.save('screen.png')
 
     if done:
-        print('done!')
+        print('Done!')
         env.reset()
 
     if top_down:

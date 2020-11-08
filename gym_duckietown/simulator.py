@@ -1409,8 +1409,15 @@ class Simulator(gym.Env):
         if not self._valid_pose(self.cur_pos, self.cur_angle):
             msg = 'Stopping the simulator because we are at an invalid pose.'
             logger.info(msg)
-            reward = REWARD_INVALID_POSE
+            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.speed)
             done_code = 'invalid-pose'
+            done = True
+        # Reached goal tile
+        elif self.get_agent_info()['Simulator']['tile_coords'] == [*self.goal_tile['coords']]:
+            msg = "Congratulations! You are a DuckieTown Master!"
+            logger.info(msg)
+            reward = self.compute_reward(self.cur_pos, self.cur_angle, self.speed)
+            done_code = 'finished'
             done = True
         # If the maximum time step count is reached
         elif self.step_count >= self.max_steps:

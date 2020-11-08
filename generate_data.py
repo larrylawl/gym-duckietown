@@ -67,8 +67,8 @@ args = parser.parse_args()
 plan_freq = 40
 plan_counter = plan_freq
 show_animation = True
-planning_threshold = 20
-early_stopping_threshold = 10 # SET THIS
+planning_threshold = 50
+early_stopping_threshold = 40 # SET THIS
 early_stopping_counter = 0
 
 if args.env_name and args.env_name.find('Duckietown') != -1:
@@ -187,7 +187,7 @@ def update(dt):
     if key_handler[key.LSHIFT]:
         action *= 1.5
 
-    obs, reward, done, info = env.step(action)
+    obs, reward, done, info, loss = env.step(action)
     print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
 
     if key_handler[key.RETURN]:
@@ -540,7 +540,7 @@ def plot_initial_positions(xi, goal, ob):
     plt.grid(True)
     plt.pause(0.0001)
 
-def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.circle):
+def dwa(gx=5, gy=4, robot_type=RobotType.circle):
     """
     Dynamic Window Approach. Plots the intention image. If successful, trajectory will be shown. Else, only map will be shown.
     
@@ -563,7 +563,8 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.circle):
     xi = np.array([px, pz, yaw, v, w]) # stores initial
     # print(f"[px, pz, yaw, v, w]: {x}")
     # goal position [x(m), y(m)]
-    goal = np.array([gx, gy])
+    gx, gy = env.goal_tile['coords']
+    goal = np.array([gx, -gy])
 
     # input [forward speed, yaw_rate]
 
