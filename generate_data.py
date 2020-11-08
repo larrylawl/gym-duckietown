@@ -149,7 +149,7 @@ def did_move():
 
 
 # calls planning every %plan_freq steps
-plan_freq = 20
+plan_freq = 40
 plan_counter = plan_freq
 
 def update(dt):
@@ -257,7 +257,7 @@ class Config:
         self.v_resolution = 0.01  # [m/s]
         self.yaw_rate_resolution = 0.1 * math.pi / 180.0  # [rad/s]
         self.dt = 0.1  # [s] Time tick for motion prediction
-        self.predict_time = 0.5  # [s]
+        self.predict_time = 0.1  # [s]
         self.to_goal_cost_gain = 0.15
         self.speed_cost_gain = 1.0
         self.obstacle_cost_gain = 1.0
@@ -287,8 +287,9 @@ class Config:
             [[5,-3], [5,-2]],
             [[4,-3], [5,-3]],
         ]
+        ## Don't delete: fast planning
         # ob_cood = []
-        # for tile in env.obstacle_tiles:
+        # for tile in env.obstacle_tiles: 
         #     # reflect about x-axis to fit duckietown's map
         #     # e.g. duckietown's (2,3) coordinate is actually (2, -3)
         #     (x, y) = tile['coords']
@@ -637,6 +638,7 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.circle):
         # plt.figure(figsize=(1.12, 1.12)) # fixed size before plotting
 
         if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
+            plt.cla()
             plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
             plot_initial_positions(xi, goal, ob)
         else: # failed plan shows initial location. 
@@ -652,7 +654,9 @@ def dwa(gx=3.5, gy=-3.5, robot_type=RobotType.circle):
 
         # TODO: rotate internally with pyplot instead
         im = Image.open(intent_dir + f'I_{counter}.png')
-        im.rotate(90 - (yaw * 180 / math.pi)).save(intent_dir + f'I_{counter}.png')
+        im = im.rotate(90 - (yaw * 180 / math.pi))
+        im.show()
+        im.save(intent_dir + f'I_{counter}.png')
 
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
