@@ -14,10 +14,12 @@ from pyglet.window import key
 import numpy as np
 import gym
 import gym_duckietown
+import time
 
 
 from gym_duckietown.envs import DuckietownEnv
 from gym_duckietown.wrappers import UndistortWrapper
+from dwa import dwa
 from PIL import Image
 
 
@@ -45,6 +47,10 @@ parser.add_argument('--domain-rand', action='store_true', help='enable domain ra
 parser.add_argument('--frame-skip', default=1, type=int, help='number of frames to skip')
 parser.add_argument('--seed', default=1, type=int, help='seed')
 args = parser.parse_args()
+
+# SET THIS
+plan_freq = 40
+plan_counter = plan_freq
 
 env = DuckietownEnv(
     seed = args.seed,
@@ -111,14 +117,33 @@ to_tensor = T.ToTensor(
 
 next_action = np.array([0.0, 0.0])
 
+def did_move():
+    action = env.get_agent_info()['Simulator']['action']
+    return action[0] != 0.0 or action[1] != 0.0
+
+gx, gy = env.goal_tile['coords']
+gy = -gy
+intention = None
+
 def update(dt):
     """
     This function is called at every frame to handle
     movement/stepping and redrawing
     """
-    global next_action
+    
+    global next_action, intention
 
     action = next_action
+     
+    global plan_counter
+    planned = plan_counter == plan_freq
+    moved = did_move()
+    if planned:
+        plan_counter = 0
+        intention = dwa(gx, gy, env)
+        intention.show()
+    elif moved: # only increase plan counter if you move
+        plan_counter += 1
 
     if key_handler[key.UP]:
         action = np.array([0.44, 0.0])
@@ -132,8 +157,11 @@ def update(dt):
     if key_handler[key.LSHIFT]:
         action *= 1.5
 
-    obs, reward, done, info = env.step(action)
+    # obs, reward, done, info = env.step(action)
     # print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
+    obs, reward, done, info, loss, done_code = env.step(action)
+    # print('step_count = %s, reward=%.3f, loss=%i' % (env.unwrapped.step_count, reward, loss))
+
 
     ###########
     # BISENET #
@@ -148,18 +176,19 @@ def update(dt):
     #################
     labels = labels.astype(np.uint8)
     labels = Image.fromarray(labels).resize(size=(224, 224))
+    labels = img_to_array(labels)
 
     # INet only accepts RGB images i.e. input needs 3 channels
     # However, predicted labels only has a single channel
     # Hacky fix: duplicate along the single channel to get 3 input channels
     labels = np.repeat(labels, 3, axis=2)
  
-    intention = img_to_array(load_img(f"{inet_cfg['data_dir']}/intentions/I_0.png", target_size=(224, 224)))
+    intention = img_to_array(intention)
     speed = np.array([env.get_agent_info()['Simulator']['robot_speed']])
 
     # From labels, intention and speed, derive next action using IntentionNet
     next_action = inet.predict_control(labels, intention, speed, segmented=True).squeeze()
-    # print("Predicted control: ", next_action)
+    print("Predicted control: ", next_action)
 
     if key_handler[key.RETURN]:
         im = Image.fromarray(obs)
@@ -167,7 +196,13 @@ def update(dt):
         im.save('screen.png')
 
     if done:
-        print('Crashed.')
+        print('Done!')
+        success = False
+        if done_code == 'finished':
+            success = True
+        end = time.time()
+        time_taken = end - start
+        log(success, reward, loss, time_taken)
         env.reset()
 
     if top_down:
@@ -175,10 +210,20 @@ def update(dt):
     else:
         env.render()
 
+def log(success, reward, loss, time_taken):
+    import datetime, os
+    if os.path.exists("log.txt"):
+        append_write = 'a'
+    else:
+        append_write = 'w'
+    text_file = open("log.txt", append_write)
+    text_file.write(f'{datetime.datetime.now()}: success: {success}, reward: {reward}, loss: {loss}, time_taken: {time_taken}.\n')
+    text_file.close()
 
 pyglet.clock.schedule_interval(func=update, interval=1.0 / env.unwrapped.frame_rate)
 
 # Enter main event loop
+start = time.time()
 pyglet.app.run()
 
 env.close()

@@ -38,191 +38,171 @@ from enum import Enum
 from matplotlib import pyplot as plt, transforms
 import numpy as np
 
-def str2bool(v):
-    if isinstance(v, bool):
-       return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+# def str2bool(v):
+#     if isinstance(v, bool):
+#        return v
+#     if v.lower() in ('yes', 'true', 't', 'y', '1'):
+#         return True
+#     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+#         return False
+#     else:
+#         raise argparse.ArgumentTypeError('Boolean value expected.')
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--map-name', default='udem1')
-parser.add_argument('--distortion', default=False, action='store_true')
-parser.add_argument('--draw-curve', action='store_true', help='draw the lane following curve')
-parser.add_argument('--draw-bbox', action='store_true', help='draw collision detection bounding boxes')
-parser.add_argument('--domain-rand', action='store_true', help='enable domain randomization')
-parser.add_argument('--frame-skip', default=1, type=int, help='number of frames to skip')
-parser.add_argument('--seed', default=1, type=int, help='seed')
-parser.add_argument('--save', action='store_true', help='Saves datasets.')
-parser.add_argument('--image_dir', default="./data/images/", type=str, help='Directory to save images.')
-parser.add_argument('--action_dir', default="./data/actions/", type=str, help='Directory to save actions.')
-parser.add_argument('--intent_dir', default="./data/intentions/", type=str, help='Directory to save intentions.')
-parser.add_argument('--counter-start', default=0, type=int, help='Saved image filenames start from this number')
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--map-name', default='udem1')
+# parser.add_argument('--distortion', default=False, action='store_true')
+# parser.add_argument('--draw-curve', action='store_true', help='draw the lane following curve')
+# parser.add_argument('--draw-bbox', action='store_true', help='draw collision detection bounding boxes')
+# parser.add_argument('--domain-rand', action='store_true', help='enable domain randomization')
+# parser.add_argument('--frame-skip', default=1, type=int, help='number of frames to skip')
+# parser.add_argument('--seed', default=1, type=int, help='seed')
+# parser.add_argument('--save', action='store_true', help='Saves datasets.')
+# parser.add_argument('--image_dir', default="./data/images/", type=str, help='Directory to save images.')
+# parser.add_argument('--action_dir', default="./data/actions/", type=str, help='Directory to save actions.')
+# parser.add_argument('--intent_dir', default="./data/intentions/", type=str, help='Directory to save intentions.')
+# parser.add_argument('--counter-start', default=0, type=int, help='Saved image filenames start from this number')
+# args = parser.parse_args()
 
-# SET THIS
-plan_freq = 20
-plan_counter = plan_freq
-show_animation = True
-planning_threshold = 40
-early_stopping_threshold = planning_threshold - 10
-early_stopping_counter = 0
+# env = DuckietownEnv(
+#     seed = args.seed,
+#     map_name = args.map_name,
+#     draw_curve = args.draw_curve,
+#     draw_bbox = args.draw_bbox,
+#     domain_rand = args.domain_rand,
+#     frame_skip = args.frame_skip,
+#     distortion = args.distortion,
+# )
 
-env = DuckietownEnv(
-    seed = args.seed,
-    map_name = args.map_name,
-    draw_curve = args.draw_curve,
-    draw_bbox = args.draw_bbox,
-    domain_rand = args.domain_rand,
-    frame_skip = args.frame_skip,
-    distortion = args.distortion,
-)
+# print(args)
+# if args.save:
+#     # sets variables
+#     save = args.save
+#     image_dir = args.image_dir
+#     action_dir = args.action_dir
+#     intent_dir = args.intent_dir
+#     counter = args.counter_start
+#     # Ensures image and action directory are specified
+#     assert image_dir is not None
+#     assert action_dir is not None
+#     assert intent_dir is not None
 
-print(args)
-if args.save:
-    # sets variables
-    save = args.save
-    image_dir = args.image_dir
-    action_dir = args.action_dir
-    intent_dir = args.intent_dir
-    counter = args.counter_start
-    # Ensures image and action directory are specified
-    assert image_dir is not None
-    assert action_dir is not None
-    assert intent_dir is not None
-
-    print(f"Save is turned on. Images will be saved in {image_dir}. Actions will be saved in {action_dir}. Intentions will be saved in {intent_dir}.")
+#     print(f"Save is turned on. Images will be saved in {image_dir}. Actions will be saved in {action_dir}. Intentions will be saved in {intent_dir}.")
     
-env.reset()
-env.render()
-top_down = False
+# env.reset()
+# env.render()
+# top_down = False
 
-@env.unwrapped.window.event
-def on_key_press(symbol, modifiers):
-    """
-    This handler processes keyboard commands that
-    control the simulation
-    """
-    global top_down
+# @env.unwrapped.window.event
+# def on_key_press(symbol, modifiers):
+#     """
+#     This handler processes keyboard commands that
+#     control the simulation
+#     """
+#     global top_down
 
-    if symbol == key.BACKSPACE or symbol == key.SLASH:
-        print('RESET')
-        env.reset()
-        env.render()
-        top_down = False
-    elif symbol == key.PAGEUP:
-        env.unwrapped.cam_angle[0] = 0
-    elif symbol == key.ESCAPE:
-        env.close()
-        sys.exit(0)
-    elif symbol == key.SPACE:
-        top_down = not top_down
-        if top_down:
-            env.render(mode='top_down')
-        else:
-            env.render()
+#     if symbol == key.BACKSPACE or symbol == key.SLASH:
+#         print('RESET')
+#         env.reset()
+#         env.render()
+#         top_down = False
+#     elif symbol == key.PAGEUP:
+#         env.unwrapped.cam_angle[0] = 0
+#     elif symbol == key.ESCAPE:
+#         env.close()
+#         sys.exit(0)
+#     elif symbol == key.SPACE:
+#         top_down = not top_down
+#         if top_down:
+#             env.render(mode='top_down')
+#         else:
+#             env.render()
 
-    # Take a screenshot
-    # UNCOMMENT IF NEEDED - Skimage dependency
-    # elif symbol == key.RETURN:
-    #     print('saving screenshot')
-    #     img = env.render('rgb_array')
-    #     save_img('screenshot.png', img)
+#     # Take a screenshot
+#     # UNCOMMENT IF NEEDED - Skimage dependency
+#     # elif symbol == key.RETURN:
+#     #     print('saving screenshot')
+#     #     img = env.render('rgb_array')
+#     #     save_img('screenshot.png', img)
 
-# Register a keyboard handler
-key_handler = key.KeyStateHandler()
-env.unwrapped.window.push_handlers(key_handler)
-
-# def should_plan():
-    # Replans after %plan_freq number of steps. Note that no steps are taken when stationary.
-    # return plan_counter == plan_freq
-        # action taken
-        # global plan_counter
-    #     if plan_counter == plan_freq:
-    #         # plan_counter = 0
-    #         result = True
-    #     else:
-    #         plan_counter += 1
-    # return result
-        
-def did_move():
-    action = env.get_agent_info()['Simulator']['action']
-    return action[0] != 0.0 or action[1] != 0.0
-
-def update(dt):
-    """
-    This function is called at every frame to handle
-    movement/stepping and redrawing
-    """
+# # Register a keyboard handler
+# key_handler = key.KeyStateHandler()
+# env.unwrapped.window.push_handlers(key_handler)
     
-    global plan_counter
-    planned = plan_counter == plan_freq
-    moved = did_move()
-    if planned:
-        plan_counter = 0
-        dwa()
-    elif moved: # only increase plan counter if you move
-        plan_counter += 1
+# def did_move():
+#     action = env.get_agent_info()['Simulator']['action']
+#     return action[0] != 0.0 or action[1] != 0.0
 
-    action = np.array([0.0, 0.0])
-
-    if key_handler[key.UP]:
-        action = np.array([0.44, 0.0])
-    if key_handler[key.DOWN]:
-        action = np.array([-0.44, 0])
-    if key_handler[key.LEFT]:
-        action = np.array([0.15, +1])
-    if key_handler[key.RIGHT]:
-        action = np.array([0.15, -1])
-    if key_handler[key.SPACE]:
-        action = np.array([0, 0])
-
-    # Speed boost
-    if key_handler[key.LSHIFT]:
-        action *= 1.5
-
-    obs, reward, done, info, loss = env.step(action)
-    print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
-
-    if key_handler[key.RETURN]:
-        # TODELETE: print('key.RETURN pressed!')
-        im = Image.fromarray(obs)
-
-        im.save('screen.png')
-
-    if done:
-        print('done!')
-        env.reset()
+# def update(dt):
+#     """
+#     This function is called at every frame to handle
+#     movement/stepping and redrawing
+#     """
     
-    if top_down:
-        env.render(mode = 'top_down')
-    else:
-        env.render()
+#     global plan_counter
+#     planned = plan_counter == plan_freq
+#     moved = did_move()
+#     if planned:
+#         plan_counter = 0
+#         dwa()
+#     elif moved: # only increase plan counter if you move
+#         plan_counter += 1
 
-    if args.save and (moved or planned):
-        global counter 
-        print(f'counter:{counter}')
+#     action = np.array([0.0, 0.0])
 
-        im = Image.fromarray(obs)
+#     if key_handler[key.UP]:
+#         action = np.array([0.44, 0.0])
+#     if key_handler[key.DOWN]:
+#         action = np.array([-0.44, 0])
+#     if key_handler[key.LEFT]:
+#         action = np.array([0.15, +1])
+#     if key_handler[key.RIGHT]:
+#         action = np.array([0.15, -1])
+#     if key_handler[key.SPACE]:
+#         action = np.array([0, 0])
 
-        # from random import randint
-        image_filename = f'X_{counter}.png'
-        action_filename = f'Y_{counter}.npy'
-        intention_filename=f'I_{counter}.png'
-        # im = im.resize(size = (224, 224))
-        im.save(image_dir + image_filename)
-        np.save(action_dir + action_filename, action)
-        if not planned:
-            # take previous intention image
-            # TODO: softlink instead of duplicating same image to save space
-            # print(f"path: {intent_dir + intention_filename} ")
-            prev_count = counter - 1
-            # print(f"prev_count: {prev_count}")
-            copyfile(intent_dir + f'I_{prev_count}.png', intent_dir + f'I_{counter}.png')
-        counter += 1
+#     # Speed boost
+#     if key_handler[key.LSHIFT]:
+#         action *= 1.5
+
+#     obs, reward, done, info, loss = env.step(action)
+#     print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
+
+#     if key_handler[key.RETURN]:
+#         # TODELETE: print('key.RETURN pressed!')
+#         im = Image.fromarray(obs)
+
+#         im.save('screen.png')
+
+#     if done:
+#         print('done!')
+#         env.reset()
+    
+#     if top_down:
+#         env.render(mode = 'top_down')
+#     else:
+#         env.render()
+
+#     if args.save and (moved or planned):
+        # global counter 
+        # print(f'counter:{counter}')
+
+        # im = Image.fromarray(obs)
+
+        # # from random import randint
+        # image_filename = f'X_{counter}.png'
+        # action_filename = f'Y_{counter}.npy'
+        # intention_filename=f'I_{counter}.png'
+        # # im = im.resize(size = (224, 224))
+        # im.save(image_dir + image_filename)
+        # np.save(action_dir + action_filename, action)
+        # if not planned:
+        #     # take previous intention image
+        #     # TODO: softlink instead of duplicating same image to save space
+        #     # print(f"path: {intent_dir + intention_filename} ")
+        #     prev_count = counter - 1
+        #     # print(f"prev_count: {prev_count}")
+        #     copyfile(intent_dir + f'I_{prev_count}.png', intent_dir + f'I_{counter}.png')
+        # counter += 1
 
 def dwa_control(x, config, goal, ob):
     """
@@ -537,12 +517,16 @@ def plot_initial_positions(xi, goal, ob):
     plt.grid(True)
     plt.pause(0.0001)
 
-def dwa(gx=5, gy=4, robot_type=RobotType.circle):
+def dwa(gx, gy, env, robot_type=RobotType.circle, plan_threshold = 40, show_animation = True):
     """
     Dynamic Window Approach. Plots the intention image. If successful, trajectory will be shown. Else, only map will be shown.
     
     Credits: https://github.com/larrylawl/PythonRobotics/tree/master/PathPlanning/DynamicWindowApproach
     """
+
+    # CONSTANTS
+    early_stopping_threshold = plan_threshold - 10
+    early_stopping_counter = 0
 
     print(__file__ + " start!!")
     info = env.get_agent_info()['Simulator']
@@ -571,7 +555,7 @@ def dwa(gx=5, gy=4, robot_type=RobotType.circle):
 
     best_dist_to_goal = 99999
     initial_dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
-    for i in range(planning_threshold):
+    for i in range(plan_threshold):
         u, predicted_trajectory = dwa_control(x, config, goal, ob)
         x = motion(x, u, config.dt)  # simulate robot
         trajectory = np.vstack((trajectory, x))  # store state history
@@ -620,33 +604,38 @@ def dwa(gx=5, gy=4, robot_type=RobotType.circle):
     # if show_animation:
     #     plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
     #     plt.pause(0.0001)
-    if args.save:
+    # if args.save:
         # plt.figure(figsize=(1.12, 1.12)) # fixed size before plotting
 
-        if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
-            plt.cla()
-            plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
-            plot_initial_positions(xi, goal, ob)
-        else: # failed plan shows initial location. 
-            plt.cla()
-            plot_initial_positions(xi, goal, ob)
-        
-        plot_relative_to_agent(0.75, xi)
-        
-        plt.axis('off')
-        fig = plt.gcf()
-        fig.set_size_inches(1.12, 1.12, forward = True) # inet size
-        plt.savefig(intent_dir + f'I_{counter}.png')
+    if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
+        plt.cla()
+        plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
+        plot_initial_positions(xi, goal, ob)
+    else: # failed plan shows initial location. 
+        plt.cla()
+        plot_initial_positions(xi, goal, ob)
+    
+    plot_relative_to_agent(0.75, xi)
+    
+    plt.axis('off')
+    fig = plt.gcf()
+    fig.set_size_inches(1.12, 1.12, forward = True) # inet size with dpi 200
+    temp_path = 'temp.png'
+    plt.savefig(temp_path, dpi = 200)
 
-        # TODO: rotate internally with pyplot instead
-        im = Image.open(intent_dir + f'I_{counter}.png')
-        im = im.rotate(90 - (yaw * 180 / math.pi))
-        im.show()
-        im.save(intent_dir + f'I_{counter}.png')
+    # TODO: rotate internally with matplotlib instead
+    im = Image.open(temp_path).convert('RGB')
+    im = im.rotate(90 - (yaw * 180 / math.pi))
+    # im.show()
+    # assert False
+    os.remove(temp_path)
+    return im
+    # im.show()
+    # im.save(intent_dir + f'I_{counter}.png')
 
-pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
+# pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)
 
-# Enter main event loop
-pyglet.app.run()
+# # Enter main event loop
+# pyglet.app.run()
 
-env.close()
+# env.close()
