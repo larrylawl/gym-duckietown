@@ -252,27 +252,38 @@ class Config:
         # obstacles [x(m) y(m), ....]
         # obstacles [ [(x, y), (x, y) ], ...] assumes obstacles are lines
         # ob_cood = [ [(4, -1.5), (5.5, -1.5)] ]  #TODO: reflect about x-axis
-        ob_intervals = [ # borders
-            [[0,0], [7,0]],
-            [[0,-6], [0,0]],
-            [[7,-6], [7,0]],
-            [[0,-6], [7,-6]],
-            [[6,-5], [6,-5]],
-            [[2,-2], [2,-2]], # within
-            [[2,-4], [2,-4]],
-            [[4,-4], [4,-2]],
-            [[4,-2], [5,-2]],
-            [[5,-3], [5,-2]],
-            [[4,-3], [5,-3]],
-        ]
+        # ob_intervals = [ # borders
+        #     [[0,0], [7,0]],
+        #     [[0,-6], [0,0]],
+        #     [[7,-6], [7,0]],
+        #     [[0,-6], [7,-6]],
+        #     [[6,-5], [6,-5]],
+        #     [[2,-2], [2,-2]], # within
+        #     [[2,-4], [2,-4]],
+        #     [[4,-4], [4,-2]],
+        #     [[4,-2], [5,-2]],
+        #     [[5,-3], [5,-2]],
+        #     [[4,-3], [5,-3]],
+        # ]
         ## Don't delete: fast planning
         # ob_cood = []
-        # for tile in env.obstacle_tiles: 
-        #     # reflect about x-axis to fit duckietown's map
-        #     # e.g. duckietown's (2,3) coordinate is actually (2, -3)
-        #     (x, y) = tile['coords']
-        #     # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
-        #     ob_cood.append((x, -y))
+        ob_intervals = []
+        for tile in env.obstacle_tiles: 
+            # reflect about x-axis to fit duckietown's map
+            # e.g. duckietown's (2,3) coordinate is actually (2, -3)
+            [x, y] = tile['coords']
+            # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
+            top_left = [x, -y]
+            top_right = [x + env.tile_size, -y]
+            bottom_left = [x, -y-env.tile_size]
+            bottom_right = [x + env.tile_size, -y-env.tile_size]
+            intervals = [
+                [top_left, top_right],
+                [top_left, bottom_left],
+                [bottom_left, bottom_right],
+                [top_right, bottom_right],
+            ]
+            ob_intervals.extend(intervals)
 
         #     # freq = 5 # I can't connect the dots. So i'm plotting %freq number of discrete dots to mimick a continuous line.
         #     # for i in range(freq):
