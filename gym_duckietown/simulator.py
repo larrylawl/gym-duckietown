@@ -620,11 +620,11 @@ class Simulator(gym.Env):
             self.start_tile = self._get_tile(*coords)
         
         # Get the goal tile from the map, if specified
+        self.goal_pos = None
         self.goal_tile = None
-        if 'goal_tile' in map_data:
-            coords = map_data['goal_tile']
-            self.goal_tile = self._get_tile(*coords)
-            assert self.goal_tile in self.drivable_tiles
+        if 'goal_pos' in map_data:
+            self.goal_pos = map_data['goal_pos']
+            self.goal_tile = self._get_tile(*self.goal_pos)
         
         # goal tile: (5, 4)
         self.min_drivable_tiles_to_goal = { 

@@ -67,9 +67,6 @@ env.reset()
 env.render()
 top_down = False
 
-# Set up config for dwa planning
-config = Config(env)
-
 @env.unwrapped.window.event
 def on_key_press(symbol, modifiers):
     """
@@ -125,9 +122,8 @@ def did_move():
     action = env.get_agent_info()['Simulator']['action']
     return action[0] != 0.0 or action[1] != 0.0
 
-gx, gy = env.goal_tile['coords']
-gy = -gy
 intention = None
+config = Config(env)
 
 def update(dt):
     """
@@ -144,7 +140,7 @@ def update(dt):
     moved = did_move()
     if planned:
         plan_counter = 0
-        intention = dwa(gx, gy, env, config, plan_threshold=40)
+        intention = dwa(env, config, plan_threshold=40)
         intention.show()
     elif moved: # only increase plan counter if you move
         plan_counter += 1
@@ -201,7 +197,7 @@ def update(dt):
         im.save('screen.png')
 
     if done:
-        print('Done!')
+        print(f'Done:{done_code}')
         success = False
         if done_code == 'finished':
             success = True

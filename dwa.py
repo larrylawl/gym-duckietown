@@ -100,25 +100,51 @@ class Config:
         #     [[5,-3], [5,-2]],
         #     [[4,-3], [5,-3]],
         # ]
+
+
+        # Complete hard-coded map
+        ob_intervals = [
+            [[1,-1], [7,-1]], # outside border
+            [[7,-1], [7,-5]],
+            [[7,-5], [6,-5]],
+            [[6,-5], [6,-6]],
+            [[6,-6], [1,-6]],
+            [[1,-6], [1,-1]],
+            [[2,-2], [3,-2]], # top-left tile
+            [[3,-2], [3,-3]],
+            [[3,-3], [2,-3]],
+            [[2,-3], [2,-2]],
+            [[2,-4], [3,-4]], # bot-left tile
+            [[3,-4], [3,-5]],
+            [[3,-5], [2,-5]],
+            [[2,-5], [2,-4]],
+            [[4,-2], [6,-2]], # Right weird shape
+            [[6,-2], [6,-4]],
+            [[6,-4], [5,-4]],
+            [[5,-4], [5,-5]],
+            [[5,-5], [4,-5]],
+            [[4,-5], [4,-2]]
+        ]
+
         ## Don't delete: fast planning
         # ob_cood = []
-        ob_intervals = []
-        for tile in env.obstacle_tiles: 
-            # reflect about x-axis to fit duckietown's map
-            # e.g. duckietown's (2,3) coordinate is actually (2, -3)
-            [x, y] = tile['coords']
-            # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
-            top_left = [x, -y]
-            top_right = [x + env.road_tile_size, -y]
-            bottom_left = [x, -y-env.road_tile_size]
-            bottom_right = [x + env.road_tile_size, -y-env.road_tile_size]
-            intervals = [
-                [top_left, top_right],
-                [top_left, bottom_left],
-                [bottom_left, bottom_right],
-                [top_right, bottom_right],
-            ]
-            ob_intervals.extend(intervals)
+        # ob_intervals = []
+        # for tile in env.obstacle_tiles: 
+        #     # reflect about x-axis to fit duckietown's map
+        #     # e.g. duckietown's (2,3) coordinate is actually (2, -3)
+        #     [x, y] = tile['coords']
+        #     # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
+        #     top_left = [x, -y]
+        #     top_right = [x + env.road_tile_size, -y]
+        #     bottom_left = [x, -y-env.road_tile_size]
+        #     bottom_right = [x + env.road_tile_size, -y-env.road_tile_size]
+        #     intervals = [
+        #         [top_left, top_right],
+        #         [top_left, bottom_left],
+        #         [bottom_left, bottom_right],
+        #         [top_right, bottom_right],
+        #     ]
+        #     ob_intervals.extend(intervals)
 
         self.ob = np.array(ob_intervals)
 
@@ -355,7 +381,7 @@ def plot_initial_positions(xi, goal, ob, config):
     plt.grid(True)
     plt.pause(0.0001)
 
-def dwa(gx, gy, env, config, robot_type=RobotType.circle, plan_threshold = 10, show_animation = True):
+def dwa(env, config, robot_type=RobotType.circle, plan_threshold = 10, show_animation = True):
     """
     Dynamic Window Approach. Plots the intention image. If successful, trajectory will be shown. Else, only map will be shown.
     
@@ -382,8 +408,8 @@ def dwa(gx, gy, env, config, robot_type=RobotType.circle, plan_threshold = 10, s
     xi = np.array([px, pz, yaw, v, w]) # stores initial
     # print(f"[px, pz, yaw, v, w]: {x}")
     # goal position [x(m), y(m)]
-    gx, gy = env.goal_tile['coords']
-    goal = np.array([gx, -gy])
+    gx, gy = env.goal_pos
+    goal = np.array([gx, -gy]) # GOAL
 
     # input [forward speed, yaw_rate]
 
