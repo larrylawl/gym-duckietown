@@ -49,8 +49,8 @@ parser.add_argument('--seed', default=1, type=int, help='seed')
 args = parser.parse_args()
 
 # SET THIS
-plan_freq = 40
-plan_counter = plan_freq
+steps_before_plan = 100
+plan_counter = steps_before_plan
 
 env = DuckietownEnv(
     seed = args.seed,
@@ -136,11 +136,11 @@ def update(dt):
     action = next_action
      
     global plan_counter
-    planned = plan_counter == plan_freq
+    planned = plan_counter == steps_before_plan
     moved = did_move()
     if planned:
         plan_counter = 0
-        intention = dwa(gx, gy, env)
+        intention = dwa(gx, gy, env, plan_threshold=40)
         intention.show()
     elif moved: # only increase plan counter if you move
         plan_counter += 1
