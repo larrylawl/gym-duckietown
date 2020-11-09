@@ -96,14 +96,13 @@ objects:
   height: 0.2
   optional: true
 
-# start_tile: [3.5, 3.5] # goal tile
-# start_tile: [3, 1] # easy
-start_tile: [4, 1] # medium - DONE 
-# start_tile: [6, 2] # hard - DONE
-# start_tile:  [1, 1] # DONE
-# start_tile: [1, 2]
-# start_tile: [3, 5]
-# start_tile: [5, 4] # DONE
-# start_tile: [2, 5] # DONE
+# start_tile: [5, 4] # 0
+start_tile: [6, 2] # 3
+# start_tile: [1, 5] # 5
+# start_tile: [2, 3] # 6
+# start_tile: [3, 1] # 7
+# start_tile: [1, 1] # 9
+
+goal_tile: [5, 4]
 
 tile_size: 1
