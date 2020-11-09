@@ -39,8 +39,8 @@ to_tensor = T.ToTensor(
 )
 
 # Set up directories
-images_dir = "/home/yuanbo/projects/2309/intention_net/data/images"
-labels_dir = "/home/yuanbo/projects/2309/intention_net/data/labels"
+images_dir = "/home/yuanbo/projects/2309/gym-duckietown/data/images"
+labels_dir = "/home/yuanbo/projects/2309/gym-duckietown/data/labels"
 
 # Retrieve list of images
 list_images = glob(f"{images_dir}/X_*")

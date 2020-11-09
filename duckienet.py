@@ -176,18 +176,19 @@ def update(dt):
     #################
     labels = labels.astype(np.uint8)
     labels = Image.fromarray(labels).resize(size=(224, 224))
+    # labels.show()
     labels = img_to_array(labels)
 
     # INet only accepts RGB images i.e. input needs 3 channels
     # However, predicted labels only has a single channel
     # Hacky fix: duplicate along the single channel to get 3 input channels
     labels = np.repeat(labels, 3, axis=2)
- 
-    intention = img_to_array(intention)
-    speed = np.array([env.get_agent_info()['Simulator']['robot_speed']])
+    
+    intention_array = img_to_array(intention)
+    speed = np.array([0])
 
     # From labels, intention and speed, derive next action using IntentionNet
-    next_action = inet.predict_control(labels, intention, speed, segmented=True).squeeze()
+    next_action = inet.predict_control(labels, intention_array, speed, segmented=True).squeeze()
     print("Predicted control: ", next_action)
 
     if key_handler[key.RETURN]:

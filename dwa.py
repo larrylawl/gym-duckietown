@@ -517,7 +517,7 @@ def plot_initial_positions(xi, goal, ob):
     plt.grid(True)
     plt.pause(0.0001)
 
-def dwa(gx, gy, env, robot_type=RobotType.circle, plan_threshold = 40, show_animation = True):
+def dwa(gx, gy, env, robot_type=RobotType.circle, plan_threshold = 10, show_animation = True):
     """
     Dynamic Window Approach. Plots the intention image. If successful, trajectory will be shown. Else, only map will be shown.
     

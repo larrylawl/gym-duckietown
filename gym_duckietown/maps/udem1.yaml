@@ -97,11 +97,11 @@ objects:
   optional: true
 
 # start_tile: [5, 4] # 0
-start_tile: [6, 2] # 3
+# start_tile: [6, 2] # 3
 # start_tile: [1, 5] # 5
 # start_tile: [2, 3] # 6
 # start_tile: [3, 1] # 7
-# start_tile: [1, 1] # 9
+start_tile: [1, 1] # 9
 
 goal_tile: [5, 4]
 
