@@ -38,171 +38,6 @@ from enum import Enum
 from matplotlib import pyplot as plt, transforms
 import numpy as np
 
-# def str2bool(v):
-#     if isinstance(v, bool):
-#        return v
-#     if v.lower() in ('yes', 'true', 't', 'y', '1'):
-#         return True
-#     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-#         return False
-#     else:
-#         raise argparse.ArgumentTypeError('Boolean value expected.')
-
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--map-name', default='udem1')
-# parser.add_argument('--distortion', default=False, action='store_true')
-# parser.add_argument('--draw-curve', action='store_true', help='draw the lane following curve')
-# parser.add_argument('--draw-bbox', action='store_true', help='draw collision detection bounding boxes')
-# parser.add_argument('--domain-rand', action='store_true', help='enable domain randomization')
-# parser.add_argument('--frame-skip', default=1, type=int, help='number of frames to skip')
-# parser.add_argument('--seed', default=1, type=int, help='seed')
-# parser.add_argument('--save', action='store_true', help='Saves datasets.')
-# parser.add_argument('--image_dir', default="./data/images/", type=str, help='Directory to save images.')
-# parser.add_argument('--action_dir', default="./data/actions/", type=str, help='Directory to save actions.')
-# parser.add_argument('--intent_dir', default="./data/intentions/", type=str, help='Directory to save intentions.')
-# parser.add_argument('--counter-start', default=0, type=int, help='Saved image filenames start from this number')
-# args = parser.parse_args()
-
-# env = DuckietownEnv(
-#     seed = args.seed,
-#     map_name = args.map_name,
-#     draw_curve = args.draw_curve,
-#     draw_bbox = args.draw_bbox,
-#     domain_rand = args.domain_rand,
-#     frame_skip = args.frame_skip,
-#     distortion = args.distortion,
-# )
-
-# print(args)
-# if args.save:
-#     # sets variables
-#     save = args.save
-#     image_dir = args.image_dir
-#     action_dir = args.action_dir
-#     intent_dir = args.intent_dir
-#     counter = args.counter_start
-#     # Ensures image and action directory are specified
-#     assert image_dir is not None
-#     assert action_dir is not None
-#     assert intent_dir is not None
-
-#     print(f"Save is turned on. Images will be saved in {image_dir}. Actions will be saved in {action_dir}. Intentions will be saved in {intent_dir}.")
-    
-# env.reset()
-# env.render()
-# top_down = False
-
-# @env.unwrapped.window.event
-# def on_key_press(symbol, modifiers):
-#     """
-#     This handler processes keyboard commands that
-#     control the simulation
-#     """
-#     global top_down
-
-#     if symbol == key.BACKSPACE or symbol == key.SLASH:
-#         print('RESET')
-#         env.reset()
-#         env.render()
-#         top_down = False
-#     elif symbol == key.PAGEUP:
-#         env.unwrapped.cam_angle[0] = 0
-#     elif symbol == key.ESCAPE:
-#         env.close()
-#         sys.exit(0)
-#     elif symbol == key.SPACE:
-#         top_down = not top_down
-#         if top_down:
-#             env.render(mode='top_down')
-#         else:
-#             env.render()
-
-#     # Take a screenshot
-#     # UNCOMMENT IF NEEDED - Skimage dependency
-#     # elif symbol == key.RETURN:
-#     #     print('saving screenshot')
-#     #     img = env.render('rgb_array')
-#     #     save_img('screenshot.png', img)
-
-# # Register a keyboard handler
-# key_handler = key.KeyStateHandler()
-# env.unwrapped.window.push_handlers(key_handler)
-    
-# def did_move():
-#     action = env.get_agent_info()['Simulator']['action']
-#     return action[0] != 0.0 or action[1] != 0.0
-
-# def update(dt):
-#     """
-#     This function is called at every frame to handle
-#     movement/stepping and redrawing
-#     """
-    
-#     global plan_counter
-#     planned = plan_counter == plan_freq
-#     moved = did_move()
-#     if planned:
-#         plan_counter = 0
-#         dwa()
-#     elif moved: # only increase plan counter if you move
-#         plan_counter += 1
-
-#     action = np.array([0.0, 0.0])
-
-#     if key_handler[key.UP]:
-#         action = np.array([0.44, 0.0])
-#     if key_handler[key.DOWN]:
-#         action = np.array([-0.44, 0])
-#     if key_handler[key.LEFT]:
-#         action = np.array([0.15, +1])
-#     if key_handler[key.RIGHT]:
-#         action = np.array([0.15, -1])
-#     if key_handler[key.SPACE]:
-#         action = np.array([0, 0])
-
-#     # Speed boost
-#     if key_handler[key.LSHIFT]:
-#         action *= 1.5
-
-#     obs, reward, done, info, loss = env.step(action)
-#     print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
-
-#     if key_handler[key.RETURN]:
-#         # TODELETE: print('key.RETURN pressed!')
-#         im = Image.fromarray(obs)
-
-#         im.save('screen.png')
-
-#     if done:
-#         print('done!')
-#         env.reset()
-    
-#     if top_down:
-#         env.render(mode = 'top_down')
-#     else:
-#         env.render()
-
-#     if args.save and (moved or planned):
-        # global counter 
-        # print(f'counter:{counter}')
-
-        # im = Image.fromarray(obs)
-
-        # # from random import randint
-        # image_filename = f'X_{counter}.png'
-        # action_filename = f'Y_{counter}.npy'
-        # intention_filename=f'I_{counter}.png'
-        # # im = im.resize(size = (224, 224))
-        # im.save(image_dir + image_filename)
-        # np.save(action_dir + action_filename, action)
-        # if not planned:
-        #     # take previous intention image
-        #     # TODO: softlink instead of duplicating same image to save space
-        #     # print(f"path: {intent_dir + intention_filename} ")
-        #     prev_count = counter - 1
-        #     # print(f"prev_count: {prev_count}")
-        #     copyfile(intent_dir + f'I_{prev_count}.png', intent_dir + f'I_{counter}.png')
-        # counter += 1
 
 def dwa_control(x, config, goal, ob):
     """
@@ -225,7 +60,7 @@ class Config:
     simulation parameter class
     """
 
-    def __init__(self):
+    def __init__(self, env):
         # robot parameter
         self.max_speed = 1.0  # [m/s]
         self.min_speed = -0.5  # [m/s]
@@ -274,9 +109,9 @@ class Config:
             [x, y] = tile['coords']
             # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
             top_left = [x, -y]
-            top_right = [x + env.tile_size, -y]
-            bottom_left = [x, -y-env.tile_size]
-            bottom_right = [x + env.tile_size, -y-env.tile_size]
+            top_right = [x + env.road_tile_size, -y]
+            bottom_left = [x, -y-env.road_tile_size]
+            bottom_right = [x + env.road_tile_size, -y-env.road_tile_size]
             intervals = [
                 [top_left, top_right],
                 [top_left, bottom_left],
@@ -285,10 +120,6 @@ class Config:
             ]
             ob_intervals.extend(intervals)
 
-        #     # freq = 5 # I can't connect the dots. So i'm plotting %freq number of discrete dots to mimick a continuous line.
-        #     # for i in range(freq):
-        #     #     for j in range(freq):
-        #     #         ob_cood.append((x + i/freq, -y - j/freq))
         self.ob = np.array(ob_intervals)
 
     @property
@@ -300,10 +131,6 @@ class Config:
         if not isinstance(value, RobotType):
             raise TypeError("robot_type must be an instance of RobotType")
         self._robot_type = value
-
-
-config = Config()
-
 
 def motion(x, u, dt):
     """
@@ -518,7 +345,7 @@ def plot_relative_to_agent(dist, xi):
     plt.xlim([xi[0] - dist, xi[0] + dist]) 
     plt.ylim([xi[1] - dist, xi[1] + dist])
 
-def plot_initial_positions(xi, goal, ob):
+def plot_initial_positions(xi, goal, ob, config):
     plt.plot(xi[0], xi[1], "xr")
     plt.plot(goal[0], goal[1], "xb")
     plt.plot(ob[:, 0], ob[:, 1], "ok")
@@ -528,7 +355,7 @@ def plot_initial_positions(xi, goal, ob):
     plt.grid(True)
     plt.pause(0.0001)
 
-def dwa(gx, gy, env, robot_type=RobotType.circle, plan_threshold = 10, show_animation = True):
+def dwa(gx, gy, env, config, robot_type=RobotType.circle, plan_threshold = 10, show_animation = True):
     """
     Dynamic Window Approach. Plots the intention image. If successful, trajectory will be shown. Else, only map will be shown.
     
@@ -583,9 +410,10 @@ def dwa(gx, gy, env, robot_type=RobotType.circle, plan_threshold = 10, show_anim
             for o in ob:
                 p1 = o[0]
                 p2 = o[1]
-                if np.array_equal(p1, p2): 
-                    plt.plot(p1[0], p1[1], "ok")
-                else: plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "k")
+                # if np.array_equal(p1, p2): 
+                #     plt.plot(p1[0], p1[1], "ok")
+                # else: plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "k")
+                plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "k")
             # plt.plot([1, 4], "k")
             # iterate through obstacles
             # if only one elt in it, it's a point
@@ -621,10 +449,10 @@ def dwa(gx, gy, env, robot_type=RobotType.circle, plan_threshold = 10, show_anim
     if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
         plt.cla()
         plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
-        plot_initial_positions(xi, goal, ob)
+        plot_initial_positions(xi, goal, ob, config)
     else: # failed plan shows initial location. 
         plt.cla()
-        plot_initial_positions(xi, goal, ob)
+        plot_initial_positions(xi, goal, ob, config)
     
     plot_relative_to_agent(0.75, xi)
     

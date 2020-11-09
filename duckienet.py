@@ -20,6 +20,7 @@ import time
 from gym_duckietown.envs import DuckietownEnv
 from gym_duckietown.wrappers import UndistortWrapper
 from dwa import dwa
+from dwa import Config
 from PIL import Image
 
 
@@ -65,6 +66,9 @@ env = DuckietownEnv(
 env.reset()
 env.render()
 top_down = False
+
+# Set up config for dwa planning
+config = Config(env)
 
 @env.unwrapped.window.event
 def on_key_press(symbol, modifiers):
@@ -140,7 +144,7 @@ def update(dt):
     moved = did_move()
     if planned:
         plan_counter = 0
-        intention = dwa(gx, gy, env, plan_threshold=40)
+        intention = dwa(gx, gy, env, config, plan_threshold=40)
         intention.show()
     elif moved: # only increase plan counter if you move
         plan_counter += 1
