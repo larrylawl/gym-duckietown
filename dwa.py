@@ -62,8 +62,8 @@ class Config:
 
     def __init__(self, env):
         # robot parameter
-        self.max_speed = 1.0  # [m/s]
-        self.min_speed = -0.5  # [m/s]
+        self.max_speed = 0.44  # [m/s]
+        self.min_speed = 0  # [m/s]
         self.max_yaw_rate = 40.0 * math.pi / 180.0  # [rad/s]
         self.max_accel = 0.2  # [m/ss]
         self.max_delta_yaw_rate = 40.0 * math.pi / 180.0  # [rad/ss]
@@ -71,22 +71,23 @@ class Config:
         self.yaw_rate_resolution = 0.1 * math.pi / 180.0  # [rad/s]
         self.dt = 0.1  # [s] Time tick for motion prediction
         self.predict_time = 0.1  # [s]
-        self.to_goal_cost_gain = 0.15
+        self.to_goal_cost_gain = 10
         self.speed_cost_gain = 1.0
-        self.obstacle_cost_gain = 1.0
+        self.obstacle_cost_gain = 0.2
         self.robot_stuck_flag_cons = 0.001  # constant to prevent robot stucked
         self.robot_type = RobotType.circle
 
         # if robot_type == RobotType.circle
         # Also used to check if goal is reached in both types
-        self.robot_radius = (ROBOT_WIDTH + ROBOT_LENGTH) / 4 # [m] for collision check
+        self.robot_radius = 0.01 # [m] for collision check # hardcoded for duckietown
+        # self.robot_radius = (ROBOT_WIDTH + ROBOT_LENGTH) / 4
 
         # if robot_type == RobotType.rectangle
         self.robot_width = ROBOT_WIDTH  # [m] for collision check
         self.robot_length = ROBOT_LENGTH  # [m] for collision check
         # obstacles [x(m) y(m), ....]
         # obstacles [ [(x, y), (x, y) ], ...] assumes obstacles are lines
-        # ob_cood = [ [(4, -1.5), (5.5, -1.5)] ]  #TODO: reflect about x-axis
+        # ob_cood = [ [(4, -1.5), (5.5, -1.5)] ]  
         # ob_intervals = [ # borders
         #     [[0,0], [7,0]],
         #     [[0,-6], [0,0]],
@@ -171,7 +172,6 @@ def motion(x, u, dt):
 
     return x
 
-
 def calc_dynamic_window(x, config):
     """
     calculation dynamic window based on current state x
@@ -182,7 +182,7 @@ def calc_dynamic_window(x, config):
           -config.max_yaw_rate, config.max_yaw_rate]
 
     # Dynamic window from motion model
-    Vd = [x[3] - config.max_accel * config.dt, # -0.5 to reduce min speed which gives planner option to just rotate on the spot. allowing rotation mitigates the problem of ducky going out of the map.
+    Vd = [x[3] - config.max_accel * config.dt, 
           x[3] + config.max_accel * config.dt,
           x[4] - config.max_delta_yaw_rate * config.dt,
           x[4] + config.max_delta_yaw_rate * config.dt]
@@ -190,12 +190,14 @@ def calc_dynamic_window(x, config):
     #  [v_min, v_max, yaw_rate_min, yaw_rate_max]
     # print(f"vs[0]: {Vs[0]}")
     # print(f"vd[0]: {Vd[0]}")
+
+    # print(f'Vd: {Vd}')
+    # print(f'Vs: {Vs}')
     dw = [max(Vs[0], Vd[0]), min(Vs[1], Vd[1]),
           max(Vs[2], Vd[2]), min(Vs[3], Vd[3])]
     # print(f"dw: {dw}")
 
     return dw
-
 
 def predict_trajectory(x_init, v, y, config):
     """
@@ -212,7 +214,6 @@ def predict_trajectory(x_init, v, y, config):
 
     return trajectory
 
-
 def calc_control_and_trajectory(x, dw, config, goal, ob):
     """
     calculation final input with dynamic window
@@ -223,30 +224,58 @@ def calc_control_and_trajectory(x, dw, config, goal, ob):
     best_u = [0.0, 0.0]
     best_trajectory = np.array([x])
 
+    best_goal_cost = None
+    best_speed_cost = None
+    best_ob_cost = None
+
     # evaluate all trajectory with sampled input in dynamic window
-    for v in np.arange(dw[0], dw[1], config.v_resolution):
-        for y in np.arange(dw[2], dw[3], config.yaw_rate_resolution):
+    
+    # Hardcoded for duckytown
+    combinations = [
+        [0, 0],
+        [0.44, 0.0],
+        [0.35, 1],
+        [0.35, -1]
+    ]
 
-            trajectory = predict_trajectory(x_init, v, y, config)
-            # calc cost
-            to_goal_cost = config.to_goal_cost_gain * calc_to_goal_cost(trajectory, goal)
-            speed_cost = config.speed_cost_gain * (config.max_speed - trajectory[-1, 3])
-            ob_cost = config.obstacle_cost_gain * calc_obstacle_cost(trajectory, ob, config)
+    # for v in [0.44, 0.66]:
+    #     for y in [-1.5, -1, 0, 1, 1.5]:
+    # for v in np.arange(dw[0], dw[1], config.v_resolution):
+    #     for y in np.arange(dw[2], dw[3], config.yaw_rate_resolution):
+    for combination in combinations:
+        [v, y] = combination
+        trajectory = predict_trajectory(x_init, v, y, config)
+        # calc cost
+        to_goal_cost = config.to_goal_cost_gain * euclidean_dist_cost(trajectory, goal)
+        speed_cost = config.speed_cost_gain * (config.max_speed - trajectory[-1, 3])
+        ob_cost = config.obstacle_cost_gain * calc_obstacle_cost(trajectory, ob, config)
 
-            final_cost = to_goal_cost + speed_cost + ob_cost
+        # print(f'to_goal_cost: {to_goal_cost}, speed_cost: {speed_cost}, ob_cost: {ob_cost}')
+        # assert False
+        final_cost = to_goal_cost + speed_cost + ob_cost
 
-            # search minimum trajectory
-            if min_cost >= final_cost:
-                min_cost = final_cost
-                best_u = [v, y]
-                best_trajectory = trajectory
-                if abs(best_u[0]) < config.robot_stuck_flag_cons \
-                        and abs(x[3]) < config.robot_stuck_flag_cons:
-                    # to ensure the robot do not get stuck in
-                    # best v=0 m/s (in front of an obstacle) and
-                    # best omega=0 rad/s (heading to the goal with
-                    # angle difference of 0)
-                    best_u[1] = -config.max_delta_yaw_rate
+        # search minimum trajectory
+        if min_cost >= final_cost:
+            min_cost = final_cost
+            # print(f'to_goal_cost: {to_goal_cost}, speed_cost: {speed_cost}, ob_cost: {ob_cost}')    
+            # print(f'min_cost: {min_cost}')
+            best_goal_cost = to_goal_cost
+            best_speed_cost = speed_cost
+            best_ob_cost = ob_cost
+
+            best_u = [v, y]
+            best_trajectory = trajectory
+            # if abs(best_u[0]) < config.robot_stuck_flag_cons \
+            #         and abs(x[3]) < config.robot_stuck_flag_cons:
+                # to ensure the robot do not get stuck in
+                # best v=0 m/s (in front of an obstacle) and
+                # best omega=0 rad/s (heading to the goal with
+                # angle difference of 0)
+                # Commented out for duckytown as I want it to not move when stuck.
+                # best_u[1] = -config.max_delta_yaw_rate
+    print(f'best_u: {best_u}')
+    print(f'best_goal_cost: {best_goal_cost}, speed_cost: {best_speed_cost}, ob_cost: {best_ob_cost}')   
+    # assert False
     return best_u, best_trajectory
 
 def projection(p1, p2, p3):
@@ -289,13 +318,16 @@ def calc_obstacle_cost(trajectory, ob, config):
             if np.array_equal(p1, p2):
                 r.append(get_sld(p, p3))
             else:
+                # print(f't: {t}')
                 p3 = (t[0], t[1])
                 # print(f"p1: {p1}, p2: {p2}, p3: {p3}")
                 p = projection(p1, p2, p3)
                 # print(f"p:{p}")
                 r.append(get_sld(p, p3))
                 # print(f"p1: {p1}, p2: {p2}, p3: {p3}, r: {r}")
-    r = np.array(r)
+    r = np.array(r) # distance from obstacle
+    # print(f'r: {r}')
+    # assert False
     
     # ox = ob[:, 0]
     # oy = ob[:, 1]
@@ -327,14 +359,43 @@ def calc_obstacle_cost(trajectory, ob, config):
     min_r = np.min(r)
     return 1.0 / min_r  # OK
 
+def euclidean_dist_cost(trajectory, goal):
+    dx = np.abs(goal[0] - trajectory[-1, 0])
+    dy = np.abs(goal[1] - trajectory[-1, 1])
+    cost = np.sqrt(np.power(dx,2) + np.power(dy,2))
+
+    return cost
+
 def calc_to_goal_cost(trajectory, goal):
     """
         calc to goal cost with angle difference
     """
+    
 
+    # relative_error_angle = math.atan2(dy, dx)
+    # if goal[0] > trajectory[-1, 0] and goal[1] > trajectory[-1, 1]: # normal:
+    #     error_angle = relative_error_angle
+    # elif goal[0] < trajectory[-1, 0] and goal[1] > trajectory[-1, 1]: # 2nd:
+    #     error_angle = math.pi - relative_error_angle
+    # elif goal[0] < trajectory[-1, 0] and goal[1] < trajectory[-1, 1]: # 3rd:
+    #     error_angle = math.pi + relative_error_angle
+    # elif goal[0] > trajectory[-1, 0] and goal[1] < trajectory[-1, 1]:
+    #     error_angle = 2 * math.pi - relative_error_angle
+    # else:
+    #     assert False, "Out of all quadrants"
+    # cost = error_angle
+    # cost = abs(error_angle - trajectory[-1, 2])
+    
+    # print(f'trajectory: {trajectory}')
+    # print(f'goal: {goal}')
+    # print(f'error_angle: {error_angle}')
+    # print(f'diff: {error_angle - trajectory[-1, 2]}')
     dx = goal[0] - trajectory[-1, 0]
+    # dy = trajectory[-1, 1] - goal[1]
     dy = goal[1] - trajectory[-1, 1]
     error_angle = math.atan2(dy, dx)
+    # print(f'error_angle: {error_angle}')
+    # assert False
     cost_angle = error_angle - trajectory[-1, 2]
     cost = abs(math.atan2(math.sin(cost_angle), math.cos(cost_angle)))
 
@@ -387,10 +448,6 @@ def dwa(env, config, robot_type=RobotType.circle, plan_threshold = 10, show_anim
     
     Credits: https://github.com/larrylawl/PythonRobotics/tree/master/PathPlanning/DynamicWindowApproach
     """
-
-    # CONSTANTS
-    early_stopping_threshold = plan_threshold - 10
-    early_stopping_counter = 0
 
     print(__file__ + " start!!")
     info = env.get_agent_info()['Simulator']
@@ -453,15 +510,6 @@ def dwa(env, config, robot_type=RobotType.circle, plan_threshold = 10, show_anim
 
         # check reaching goal
         dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
-        if dist_to_goal + 0.001 < best_dist_to_goal:
-            early_stopping_counter = 0
-            best_dist_to_goal = dist_to_goal
-        else:
-            early_stopping_counter += 1
-            if early_stopping_counter == early_stopping_threshold:
-                print("Failed :(")
-                break
-
         if dist_to_goal <= config.robot_radius + 0.5:
             print("Goal!!")
             break
@@ -472,13 +520,13 @@ def dwa(env, config, robot_type=RobotType.circle, plan_threshold = 10, show_anim
     # if args.save:
         # plt.figure(figsize=(1.12, 1.12)) # fixed size before plotting
 
-    if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
-        plt.cla()
-        plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
-        plot_initial_positions(xi, goal, ob, config)
-    else: # failed plan shows initial location. 
-        plt.cla()
-        plot_initial_positions(xi, goal, ob, config)
+    # if best_dist_to_goal < initial_dist_to_goal: # good plan saves trajectory
+    plt.cla()
+    plt.plot(trajectory[:, 0], trajectory[:, 1], "-r")
+    plot_initial_positions(xi, goal, ob, config)
+    # else: # failed plan shows initial location. 
+    #     plt.cla()
+    #     plot_initial_positions(xi, goal, ob, config)
     
     plot_relative_to_agent(0.75, xi)
     
@@ -491,8 +539,6 @@ def dwa(env, config, robot_type=RobotType.circle, plan_threshold = 10, show_anim
     # TODO: rotate internally with matplotlib instead
     im = Image.open(temp_path).convert('RGB')
     im = im.rotate(90 - (yaw * 180 / math.pi))
-    # im.show()
-    # assert False
     os.remove(temp_path)
     return im
     # im.show()

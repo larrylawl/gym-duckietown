@@ -616,10 +616,9 @@ class Simulator(gym.Env):
         # Get the starting tile from the map, if specified
         self.start_tile = None
         if 'start_tile' in map_data:
-            coords = map_data['start_tile']
-            self.start_tile = self._get_tile(*coords)
+            self.start_tile = self._get_tile(*map_data['start_tile'])
         
-        # Get the goal tile from the map, if specified
+        # Get the goal tile and pos from the map, if specified
         self.goal_pos = None
         self.goal_tile = None
         if 'goal_pos' in map_data:

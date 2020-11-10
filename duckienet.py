@@ -50,7 +50,7 @@ parser.add_argument('--seed', default=1, type=int, help='seed')
 args = parser.parse_args()
 
 # SET THIS
-steps_before_plan = 100
+steps_before_plan = 30
 plan_counter = steps_before_plan
 
 env = DuckietownEnv(
@@ -97,18 +97,18 @@ key_handler = key.KeyStateHandler()
 env.unwrapped.window.push_handlers(key_handler)
 
 # Load inet model
-num_intentions = 4
-num_control = 2
-inet = Policy(inet_cfg['intention_mode'], inet_cfg['input_frame'], num_control, inet_cfg['model_dir'], num_intentions)
+# num_intentions = 4
+# num_control = 2
+# inet = Policy(inet_cfg['intention_mode'], inet_cfg['input_frame'], num_control, inet_cfg['model_dir'], num_intentions)
 
 
 torch.set_grad_enabled(False)
 
 # Load bisenet model
-bisenet = BiSeNetV2(bisenet_cfg['n_classes'])
-bisenet.load_state_dict(torch.load(bisenet_cfg['weights_path'], map_location='cpu'))
-bisenet.eval()
-bisenet.cuda()
+# bisenet = BiSeNetV2(bisenet_cfg['n_classes'])
+# bisenet.load_state_dict(torch.load(bisenet_cfg['weights_path'], map_location='cpu'))
+# bisenet.eval()
+# bisenet.cuda()
 
 # prepare data (for bisenet)
 to_tensor = T.ToTensor(
@@ -140,7 +140,7 @@ def update(dt):
     moved = did_move()
     if planned:
         plan_counter = 0
-        intention = dwa(env, config, plan_threshold=40)
+        intention = dwa(env, config, plan_threshold=200)
         intention.show()
     elif moved: # only increase plan counter if you move
         plan_counter += 1
