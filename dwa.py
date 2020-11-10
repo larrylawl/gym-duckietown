@@ -273,8 +273,8 @@ def calc_control_and_trajectory(x, dw, config, goal, ob):
                 # angle difference of 0)
                 # Commented out for duckytown as I want it to not move when stuck.
                 # best_u[1] = -config.max_delta_yaw_rate
-    print(f'best_u: {best_u}')
-    print(f'best_goal_cost: {best_goal_cost}, speed_cost: {best_speed_cost}, ob_cost: {best_ob_cost}')   
+    # print(f'best_u: {best_u}')
+    # print(f'best_goal_cost: {best_goal_cost}, speed_cost: {best_speed_cost}, ob_cost: {best_ob_cost}')   
     # assert False
     return best_u, best_trajectory
 
@@ -474,8 +474,8 @@ def dwa(env, config, robot_type=RobotType.circle, plan_threshold = 10, show_anim
     trajectory = np.array(x)
     ob = config.ob
 
-    best_dist_to_goal = 99999
-    initial_dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
+    # best_dist_to_goal = 99999
+    # initial_dist_to_goal = math.hypot(x[0] - goal[0], x[1] - goal[1])
     for i in range(plan_threshold):
         u, predicted_trajectory = dwa_control(x, config, goal, ob)
         x = motion(x, u, config.dt)  # simulate robot
