@@ -39,14 +39,17 @@ to_tensor = T.ToTensor(
 )
 
 # Set up directories
-images_dir = "/home/yuanbo/projects/2309/gym-duckietown/data/images"
-labels_dir = "/home/yuanbo/projects/2309/gym-duckietown/data/labels"
+images_dir = "/home/yuanbo/projects/2309/gym-duckietown/data/test/images"
+labels_dir = "/home/yuanbo/projects/2309/gym-duckietown/data/test/labels"
 
 # Retrieve list of images
 list_images = glob(f"{images_dir}/X_*")
 
 for i in range(len(list_images)):
-    img = np.array(Image.open(list_images[i]))
+    path = list_images[i]
+    img = np.array(Image.open(path))
+    img_num = path[path.index("X") + 2: path.index(".")]
+    # print(f"Retrieved image {img_num}")
     
     # Generate segmentation labels from using bisenet
     img = to_tensor(dict(im=img, lb=None))['im'].unsqueeze(0).cuda()
@@ -55,6 +58,7 @@ for i in range(len(list_images)):
     labels = Image.fromarray(labels)
 
     # Save image
-    labels.save(labels_dir + f"/L_{i}.png")
+    labels.save(labels_dir + f"/L_{img_num}.png")
+    # print(f"Saved label {img_num}")
 
 print(f"Segmented {len(list_images)} images!")
