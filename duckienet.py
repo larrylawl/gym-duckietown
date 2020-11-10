@@ -133,14 +133,14 @@ def update(dt):
     
     global next_action, intention
 
-    action = next_action
+    action = next_action - np.array([0.15, 0])
      
     global plan_counter
     planned = plan_counter == steps_before_plan
     moved = did_move()
     if planned:
         plan_counter = 0
-        intention = dwa(env, config, plan_threshold=20)
+        intention = dwa(env, config, plan_threshold=30)
         intention.show()
     elif moved: # only increase plan counter if you move
         plan_counter += 1

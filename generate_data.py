@@ -77,6 +77,7 @@ env = DuckietownEnv(
 
 # SET THIS
 steps_before_plan = 20
+plan_threshold = 25
 plan_counter = steps_before_plan
 intention = None
 config = Config(env)
@@ -95,7 +96,8 @@ if args.save:
     assert intent_dir is not None
 
     print(f"Save is turned on. Images will be saved in {image_dir}. Actions will be saved in {action_dir}. Intentions will be saved in {intent_dir}.")
-    
+    print(f"Counter starts from {counter}.")
+
 env.reset()
 env.render()
 top_down = False
@@ -151,7 +153,7 @@ def update(dt):
     moved = did_move()
     if planned:
         plan_counter = 0
-        intention = dwa(env, config, plan_threshold=20)
+        intention = dwa(env, config, plan_threshold=plan_threshold)
         intention.show()
     elif moved: # only increase plan counter if you move
         plan_counter += 1
@@ -174,7 +176,7 @@ def update(dt):
         action *= 1.5
 
     obs, reward, done, info, loss, done_code = env.step(action)
-    print('step_count = %s, reward=%.3f, loss=%i' % (env.unwrapped.step_count, reward, loss))
+    # print('step_count = %s, reward=%.3f, loss=%i' % (env.unwrapped.step_count, reward, loss))
 
     if key_handler[key.RETURN]:
         # TODELETE: print('key.RETURN pressed!')
@@ -193,7 +195,7 @@ def update(dt):
 
     if args.save and moved:
         global counter 
-        # print(f'counter:{counter}')
+        print(f'counter:{counter}')
 
         X = Image.fromarray(obs)
 
