@@ -344,7 +344,7 @@ class Simulator(gym.Env):
         if verbose:
             print("Updating current position and angle:")
             print(f"position: {self.cur_pos} -> {pos}")
-            print(f"angle: {self.angle} -> {angle}")
+            print(f"angle: {self.cur_angle} -> {angle}")
         self.cur_pos = pos.copy()
         self.cur_angle = angle
 
