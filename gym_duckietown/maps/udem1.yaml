@@ -139,13 +139,13 @@ objects:
   optional: false
 
 # start_tile: [5, 4] # 0
-start_tile: [6, 4] # 1
+# start_tile: [6, 4] # 1
 # start_tile: [4, 5] # 2 
 # start_tile: [6, 2] # 3 - no plan DONE not min tile due to reverse face
 # start_tile: [3, 4] # 4
 # start_tile: [3, 3] # 5 - no plan DONE
 # start_tile: [2, 3] # 6 - no plan DONE
-# start_tile: [3, 1] # 7 - DONE
+start_tile: [3, 1] # 7 - DONE
 # start_tile: [1, 1] # 9 - DONE
 # start_tile: [3, 3] # - DONE (adjusted to start with plan)
 

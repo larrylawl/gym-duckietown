@@ -15,6 +15,7 @@ import numpy as np
 import gym
 import gym_duckietown
 import time
+import cv2
 
 
 from gym_duckietown.envs import DuckietownEnv
@@ -90,7 +91,8 @@ def on_key_press(symbol, modifiers):
             env.render()
     elif symbol == key.ESCAPE:
         env.close()
-        sys.exit(0)
+        cv2.destroyAllWindows()
+        event_loop.exit()
 
 # Register a keyboard handler
 key_handler = key.KeyStateHandler()
@@ -140,7 +142,11 @@ def update(dt):
     if planned:
         plan_counter = 0
         intention = dwa(env, config, plan_threshold=30)
-        intention.show()
+        # intention.show()
+
+        img = cv2.cvtColor(np.array(intention), cv2.COLOR_RGB2BGR)
+        cv2.imshow("intention", img)
+        cv2.waitKey(1)
     elif moved: # only increase plan counter if you move
         plan_counter += 1
 
@@ -205,6 +211,7 @@ def update(dt):
         objects_avoided = env.get_agent_info()['Simulator']['objects_avoided']
         log(success, reward, loss, time_taken, objects_avoided)
         env.reset()
+        # event_loop.exit()
 
     if top_down:
         env.render(mode='top_down')
@@ -225,6 +232,7 @@ pyglet.clock.schedule_interval(func=update, interval=1.0 / env.unwrapped.frame_r
 
 # Enter main event loop
 start = time.time()
-pyglet.app.run()
+event_loop = pyglet.app.EventLoop()
+event_loop.run()
 
 env.close()
