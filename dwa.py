@@ -85,74 +85,59 @@ class Config:
         # if robot_type == RobotType.rectangle
         self.robot_width = ROBOT_WIDTH  # [m] for collision check
         self.robot_length = ROBOT_LENGTH  # [m] for collision check
-        # obstacles [x(m) y(m), ....]
+        self.ob = self.set_ob(env)
+    
+    def set_ob(self, env):
         # obstacles [ [(x, y), (x, y) ], ...] assumes obstacles are lines
-        # ob_cood = [ [(4, -1.5), (5.5, -1.5)] ]  
-        # ob_intervals = [ # borders
-        #     [[0,0], [7,0]],
-        #     [[0,-6], [0,0]],
-        #     [[7,-6], [7,0]],
-        #     [[0,-6], [7,-6]],
-        #     [[6,-5], [6,-5]],
-        #     [[2,-2], [2,-2]], # within
-        #     [[2,-4], [2,-4]],
-        #     [[4,-4], [4,-2]],
-        #     [[4,-2], [5,-2]],
-        #     [[5,-3], [5,-2]],
-        #     [[4,-3], [5,-3]],
-        # ]
+        ob_intervals = []
 
         # TODO: toggle based on map name
-        # Hardcoded for udem1.yaml
-        # ob_intervals = [
-        #     [[1,-1], [7,-1]], # outside border
-        #     [[7,-1], [7,-5]],
-        #     [[7,-5], [6,-5]],
-        #     [[6,-5], [6,-6]],
-        #     [[6,-6], [1,-6]],
-        #     [[1,-6], [1,-1]],
-        #     [[2,-2], [3,-2]], # top-left tile
-        #     [[3,-2], [3,-3]],
-        #     [[3,-3], [2,-3]],
-        #     [[2,-3], [2,-2]],
-        #     [[2,-4], [3,-4]], # bot-left tile
-        #     [[3,-4], [3,-5]],
-        #     [[3,-5], [2,-5]],
-        #     [[2,-5], [2,-4]],
-        #     [[4,-2], [6,-2]], # Right weird shape
-        #     [[6,-2], [6,-4]],
-        #     [[6,-4], [5,-4]],
-        #     [[5,-4], [5,-5]],
-        #     [[5,-5], [4,-5]],
-        #     [[4,-5], [4,-2]]
-        # ]
-
-        # Hardcoded for obstacle tiles
-        ob_intervals = [
-            [[0,0], [35, 0]],
-            [[0,-1], [35, -1]]
-        ]
-
-        ## Don't delete: fast planning
-        # ob_intervals = []
-        # for tile in env.obstacle_tiles: 
-        #     # reflect about x-axis to fit duckietown's map
-        #     # e.g. duckietown's (2,3) coordinate is actually (2, -3)
-        #     [x, y] = tile['coords']
-        #     # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
-        #     top_left = [x, -y]
-        #     top_right = [x + env.road_tile_size, -y]
-        #     bottom_left = [x, -y-env.road_tile_size]
-        #     bottom_right = [x + env.road_tile_size, -y-env.road_tile_size]
-        #     intervals = [
-        #         [top_left, top_right],
-        #         [top_left, bottom_left],
-        #         [bottom_left, bottom_right],
-        #         [top_right, bottom_right],
-        #     ]
-        #     ob_intervals.extend(intervals)
-
-        self.ob = np.array(ob_intervals)
+        if "udem1" in env.map_name:
+            ob_intervals = [
+                [[1,-1], [7,-1]], # outside border
+                [[7,-1], [7,-5]],
+                [[7,-5], [6,-5]],
+                [[6,-5], [6,-6]],
+                [[6,-6], [1,-6]],
+                [[1,-6], [1,-1]],
+                [[2,-2], [3,-2]], # top-left tile
+                [[3,-2], [3,-3]],
+                [[3,-3], [2,-3]],
+                [[2,-3], [2,-2]],
+                [[2,-4], [3,-4]], # bot-left tile
+                [[3,-4], [3,-5]],
+                [[3,-5], [2,-5]],
+                [[2,-5], [2,-4]],
+                [[4,-2], [6,-2]], # Right weird shape
+                [[6,-2], [6,-4]],
+                [[6,-4], [5,-4]],
+                [[5,-4], [5,-5]],
+                [[5,-5], [4,-5]],
+                [[4,-5], [4,-2]]
+            ]
+        elif "straight_road" in env.map_name:
+            ob_intervals = [
+                [[0,0], [35, 0]],
+                [[0,-1], [35, -1]]
+            ]
+        else: 
+            for tile in env.obstacle_tiles: 
+                # reflect about x-axis to fit duckietown's map
+                # e.g. duckietown's (2,3) coordinate is actually (2, -3)
+                [x, y] = tile['coords']
+                # (x, -y) refer to starting coordinate of tile. tile is 1x1 grid from (x, -y).
+                top_left = [x, -y]
+                top_right = [x + env.road_tile_size, -y]
+                bottom_left = [x, -y-env.road_tile_size]
+                bottom_right = [x + env.road_tile_size, -y-env.road_tile_size]
+                intervals = [
+                    [top_left, top_right],
+                    [top_left, bottom_left],
+                    [bottom_left, bottom_right],
+                    [top_right, bottom_right],
+                ]
+                ob_intervals.extend(intervals)
+        return np.array(ob_intervals)
 
     @property
     def robot_type(self):
