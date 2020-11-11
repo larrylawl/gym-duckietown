@@ -475,12 +475,15 @@ class Simulator(gym.Env):
 
         # Keep trying to find a valid spawn position on this tile
         for _ in range(MAX_SPAWN_ATTEMPTS):
-            i, j = tile['coords']
+            if self.start_pos is None:
+                i, j = tile['coords']
 
-            # Choose a random position on this tile
-            x = self.np_random.uniform(i, i + 1) * self.road_tile_size
-            z = self.np_random.uniform(j, j + 1) * self.road_tile_size
-            propose_pos = np.array([x, 0, z])
+                # Choose a random position on this tile
+                x = self.np_random.uniform(i, i + 1) * self.road_tile_size
+                z = self.np_random.uniform(j, j + 1) * self.road_tile_size
+                propose_pos = np.array([x, 0, z])
+            else:
+                propose_pos = self.start_pos
 
             # Choose a random direction
             if self.start_angle is None:
@@ -522,8 +525,8 @@ class Simulator(gym.Env):
             raise Exception(msg)
 
         self.cur_pos = propose_pos
-        # self.cur_angle = propose_angle
-        self.cur_angle = self.start_angle
+        self.cur_angle = propose_angle
+        # self.cur_angle = self.start_angle
         # self.cur_pos = self.start_pos
 
         logger.info('Starting at %s %s' % (self.cur_pos, self.cur_angle))

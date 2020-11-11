@@ -139,7 +139,7 @@ objects:
   optional: false
 
 # start_tile: [5, 4] # 0
-start_pos: [1.5, 0, 1.5]
+start_pos: [1.2, 0, 1.2]
 # start_tile: [1, 1]
 start_angle: 270
 # start_tile: [6, 4] # 1
