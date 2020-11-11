@@ -473,10 +473,6 @@ class Simulator(gym.Env):
                 tile_idx = self.np_random.randint(0, len(self.drivable_tiles))
                 tile = self.drivable_tiles[tile_idx]
 
-        # if self.start_pos is not None and self.start_angle is not None:
-        #     propose_pos = self.start_pos
-        #     propose_angle = self.start_angle
-        # else:
         # Keep trying to find a valid spawn position on this tile
         for _ in range(MAX_SPAWN_ATTEMPTS):
             i, j = tile['coords']
@@ -487,7 +483,10 @@ class Simulator(gym.Env):
             propose_pos = np.array([x, 0, z])
 
             # Choose a random direction
-            propose_angle = self.np_random.uniform(0, 2 * math.pi)
+            if self.start_angle is None:
+                propose_angle = self.np_random.uniform(0, 2 * math.pi)
+            else:
+                propose_angle = self.start_angle
 
             # logger.debug('Sampled %s %s angle %s' % (propose_pos[0],
             #                                          propose_pos[1],
@@ -525,6 +524,7 @@ class Simulator(gym.Env):
         self.cur_pos = propose_pos
         # self.cur_angle = propose_angle
         self.cur_angle = self.start_angle
+        # self.cur_pos = self.start_pos
 
         logger.info('Starting at %s %s' % (self.cur_pos, self.cur_angle))
 
@@ -620,9 +620,15 @@ class Simulator(gym.Env):
         self._load_objects(map_data)
 
         # Get the starting tile from the map, if specified
-        self.start_tile = None
-        if 'start_tile' in map_data:
-            self.start_tile = self._get_tile(*map_data['start_tile'])
+        # self.start_tile = None
+        # if 'start_tile' in map_data:
+        #     self.start_tile = self._get_tile(*map_data['start_tile'])
+        
+        self.start_pos = None
+        if 'start_pos' in map_data:
+            self.start_pos = map_data['start_pos']
+            x, _, z = self.start_pos
+            self.start_tile = self._get_tile(x, z)
 
         self.start_angle = None
         if 'start_angle' in map_data:
