@@ -466,7 +466,7 @@ class Simulator(gym.Env):
                 raise Exception(msg)
             logger.debug('tile: %s' % tile)
         else:
-            if self.start_tile is not None:
+            if self.start_pos is not None:
                 tile = self.start_tile
             else:
                 # Select a random drivable tile to start on
@@ -651,6 +651,7 @@ class Simulator(gym.Env):
             gx, _, gz = self.goal_pos
             self.goal_tile = self._get_tile(gx, gz)
         
+        self.min_drivable_tiles_to_goal = None
         if "udem1" in self.map_name:
             # goal tile: (5, 4)
             self.min_drivable_tiles_to_goal = { 
@@ -1506,7 +1507,7 @@ class Simulator(gym.Env):
             done_code = 'invalid-pose'
             done = True
         # Reached goal tile
-        elif self.get_agent_info()['Simulator']['tile_coords'] == [*self.goal_tile['coords']]:
+        elif self.goal_tile is not None and self.get_agent_info()['Simulator'] and['tile_coords'] == [*self.goal_tile['coords']]:
             msg = "Congratulations! You are a DuckieTown Master!"
             logger.info(msg)
             reward = self.compute_reward(self.cur_pos, self.cur_angle, self.speed)
