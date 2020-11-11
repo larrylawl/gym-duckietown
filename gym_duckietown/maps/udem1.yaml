@@ -139,22 +139,50 @@ objects:
   optional: false
 
 # start_tile: [5, 4] # 0
-start_pos: [1.2, 0, 1.2]
-# start_tile: [1, 1]
-start_angle: 270
-# start_tile: [6, 4] # 1
-# start_tile: [4, 5] # 2 
-# start_tile: [6, 2] # 3 - no plan DONE not min tile due to reverse face
-# start_tile: [3, 4] # 4
-# start_tile: [3, 3] # 5 - no plan DONE
-# start_tile: [2, 3] # 6 - no plan DONE
-# start_tile: [3, 1] # 7 - DONE
-# start_tile: [1, 1] # 9 - DONE
-# start_tile: [3, 3] # - DONE (adjusted to start with plan)
 
-# Test set start tiles
-# start_tile: [1, 3]
+# # 1 
+# start_pos: [6.57, 0, 4.49]
+# angle: 183
+# # 2 
+# start_pos: [4.2, 0, 5.58]
+# angle: 0
+# # 3 
+# start_pos: [6.52, 0, 1.84] 
+# angle: 270 
+# # 4 
+# start_pos: [3.5, 0, 4.3]
+# angle: 270
+# # 5
+# start_pos: [3.5, 0, 3.2]
+# angle: 270
+# # 6 
+# start_pos: [2.15, 0, 3.3]
+# angle: 0
+# # 7 
+# start_pos: [3.4, 0, 1.7]
+# angle: 270
+# start_pos: [3.7, 0, 1.5]
+# angle: 0
+# # 9
+start_pos: [1.5, 0, 1.77]
+angle: 270
+# start_pos: [1.8, 0, 1.5]
+# angle: 0
+# #
+# start_pos: [1.5, 0, 3.5]
+# angle: 0
+# start_pos: [1.5, 0, 3.5]
+# angle: 270
 
 goal_pos: [5.5, 0, 4.5]
+
+# Alternative goal positions
+# start_pos: [4.7, 0, 5.5]
+# angle: 180
+# goal_pos: [3, 1]
+
+# start_pos: [6.5, 0, 3.3]
+# angle: 270
+# goal_pos: [2, 3]
 
 tile_size: 1
