@@ -129,6 +129,7 @@ def did_move():
 intention = None
 config = Config(env)
 list_cycles = []
+image_frames = []
 
 def update(dt):
     """    This function is called at every frame to handle
@@ -174,7 +175,7 @@ def update(dt):
 
     obs, reward, done, info, loss, done_code = env.step(action)
     # print('step_count = %s, reward=%.3f, loss=%i' % (env.unwrapped.step_count, reward, loss))
-
+    image_frames.append(obs)
 
     ###########
     # BISENET #
@@ -204,7 +205,7 @@ def update(dt):
     speed = np.array([0])
 
     # From labels, intention and speed, derive next action using IntentionNet
-    next_action = inet.predict_control(labels, intention_array, speed, segmented=True).squeeze()
+    next_action = inet.predict_control(labels, intention_array, speed, segmented=args.seg).squeeze()
     next_action[0] = min(0.44, next_action[0])
     print("Predicted control: ", next_action)
 
@@ -231,7 +232,7 @@ def update(dt):
         img = cv2.cvtColor(np.array(intention), cv2.COLOR_RGB2BGR)
         cv2.imshow("intention", img)
         cv2.waitKey(1)
-        # event_loop.exit()
+        event_loop.exit()
 
     if top_down:
         env.render(mode='top_down')
@@ -262,3 +263,11 @@ env.close()
 with open('list_cycles.txt','w') as f:
     for item in list_cycles:
         f.write(item + "\n")
+
+video_name = "recorded_instance"
+video = cv2.VideoWriter(f"{video_name}.avi", 0, 60, (640, 480))
+for img in image_frames:
+    video.write(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+cv2.destroyAllWindows()
+video.release()
+print(f"Video saved as {video_name}.")
