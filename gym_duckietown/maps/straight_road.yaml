@@ -4,10 +4,11 @@ tiles:
 
 # Always start driving on the leftmost tile
 # The position and direction of the agent on the tile will be randomized
-start_tile: [0, 0]
-goal_pos: [35, 0]
+# start_pos: [0, 0, 0.4]
+start_angle: 0
+goal_pos: [35, 0, 0]
 
-tile_size: 0.585
+tile_size: 1
 
 objects:
 # Road obstacles (34 in total, 1 per tile except start & goal)
@@ -181,3 +182,4 @@ objects:
   rotate: -90
   height: 0.08
   optional: false
+
