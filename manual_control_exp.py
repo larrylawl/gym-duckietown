@@ -89,15 +89,7 @@ def update(dt):
     This function is called at every frame to handle
     movement/stepping and redrawing
     """
-    objects_avoided = env.get_agent_info()['Simulator']['objects_avoided']
-
-    print(f'objects_avoided: {objects_avoided}')
-
-    # agent_tile = env.get_agent_info()['Simulator']['tile_coords']
-    # if agent_tile == [*env.goal_tile['coords']]:
-    #     print("Congratulations! You are a DuckieTown Master!")
-        # env.reset()
-
+    
     action = np.array([0.0, 0.0])
 
     if key_handler[key.UP]:

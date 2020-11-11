@@ -126,8 +126,7 @@ intention = None
 config = Config(env)
 
 def update(dt):
-    """
-    This function is called at every frame to handle
+    """    This function is called at every frame to handle
     movement/stepping and redrawing
     """
     
@@ -203,9 +202,8 @@ def update(dt):
             success = True
         end = time.time()
         time_taken = end - start
-        obstacles_avoided = env.get_agent_info()['Simulator']['obstacles_avoided']
-        log(success, reward, loss, time_taken, obstacles_avoided)
-        env.reset()
+        objects_avoided = env.get_agent_info()['Simulator']['objects_avoided']
+        log(success, reward, loss, time_taken, objects_avoided)env.reset()
 
     if top_down:
         env.render(mode='top_down')

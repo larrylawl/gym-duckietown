@@ -102,33 +102,38 @@ class Config:
         #     [[4,-3], [5,-3]],
         # ]
 
+        # TODO: toggle based on map name
+        # Hardcoded for udem1.yaml
+        # ob_intervals = [
+        #     [[1,-1], [7,-1]], # outside border
+        #     [[7,-1], [7,-5]],
+        #     [[7,-5], [6,-5]],
+        #     [[6,-5], [6,-6]],
+        #     [[6,-6], [1,-6]],
+        #     [[1,-6], [1,-1]],
+        #     [[2,-2], [3,-2]], # top-left tile
+        #     [[3,-2], [3,-3]],
+        #     [[3,-3], [2,-3]],
+        #     [[2,-3], [2,-2]],
+        #     [[2,-4], [3,-4]], # bot-left tile
+        #     [[3,-4], [3,-5]],
+        #     [[3,-5], [2,-5]],
+        #     [[2,-5], [2,-4]],
+        #     [[4,-2], [6,-2]], # Right weird shape
+        #     [[6,-2], [6,-4]],
+        #     [[6,-4], [5,-4]],
+        #     [[5,-4], [5,-5]],
+        #     [[5,-5], [4,-5]],
+        #     [[4,-5], [4,-2]]
+        # ]
 
-        # Complete hard-coded map
+        # Hardcoded for obstacle tiles
         ob_intervals = [
-            [[1,-1], [7,-1]], # outside border
-            [[7,-1], [7,-5]],
-            [[7,-5], [6,-5]],
-            [[6,-5], [6,-6]],
-            [[6,-6], [1,-6]],
-            [[1,-6], [1,-1]],
-            [[2,-2], [3,-2]], # top-left tile
-            [[3,-2], [3,-3]],
-            [[3,-3], [2,-3]],
-            [[2,-3], [2,-2]],
-            [[2,-4], [3,-4]], # bot-left tile
-            [[3,-4], [3,-5]],
-            [[3,-5], [2,-5]],
-            [[2,-5], [2,-4]],
-            [[4,-2], [6,-2]], # Right weird shape
-            [[6,-2], [6,-4]],
-            [[6,-4], [5,-4]],
-            [[5,-4], [5,-5]],
-            [[5,-5], [4,-5]],
-            [[4,-5], [4,-2]]
+            [[0,0], [35, 0]],
+            [[0,-1], [35, -1]]
         ]
 
         ## Don't delete: fast planning
-        # ob_cood = []
         # ob_intervals = []
         # for tile in env.obstacle_tiles: 
         #     # reflect about x-axis to fit duckietown's map
@@ -285,7 +290,7 @@ def projection(p1, p2, p3):
     #distance between p1 and p2
     l2 = get_sld(p1, p2)
     if l2 == 0:
-        print('p1 and p2 are the same points')
+        assert False, 'p1 and p2 are the same points'
 
     #The line extending the segment is parameterized as p1 + t (p2 - p1).
     #The projection falls where t = [(p3-p1) . (p2-p1)] / |p2-p1|^2
@@ -315,11 +320,11 @@ def calc_obstacle_cost(trajectory, ob, config):
         p1 = o[0]
         p2 = o[1]
         for t in trajectory:
-            if np.array_equal(p1, p2):
-                r.append(get_sld(p, p3))
+            # print(f't: {t}')
+            p3 = (t[0], t[1])
+            if (np.array_equal(p1, p2)):
+                r.append(get_sld(p1, p3))
             else:
-                # print(f't: {t}')
-                p3 = (t[0], t[1])
                 # print(f"p1: {p1}, p2: {p2}, p3: {p3}")
                 p = projection(p1, p2, p3)
                 # print(f"p:{p}")
@@ -493,10 +498,10 @@ def dwa(env, config, robot_type=RobotType.circle, plan_threshold = 10, show_anim
             for o in ob:
                 p1 = o[0]
                 p2 = o[1]
-                # if np.array_equal(p1, p2): 
-                #     plt.plot(p1[0], p1[1], "ok")
-                # else: plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "k")
-                plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "k")
+                if np.array_equal(p1, p2): 
+                    print(p1)
+                    plt.plot(p1[0], p1[1], "ok")
+                else: plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "k")
             # plt.plot([1, 4], "k")
             # iterate through obstacles
             # if only one elt in it, it's a point

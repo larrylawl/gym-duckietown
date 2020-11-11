@@ -611,6 +611,8 @@ class Simulator(gym.Env):
                     self.drivable_tiles.append(tile)
                 else:
                     self.obstacle_tiles.append(tile)
+        # print(f'drivable: {self.drivable_tiles}')
+        # assert False
         self.mesh = ObjMesh.get('duckiebot')
         self._load_objects(map_data)
 
