@@ -203,7 +203,8 @@ def update(dt):
         end = time.time()
         time_taken = end - start
         objects_avoided = env.get_agent_info()['Simulator']['objects_avoided']
-        log(success, reward, loss, time_taken, objects_avoided)env.reset()
+        log(success, reward, loss, time_taken, objects_avoided)
+        env.reset()
 
     if top_down:
         env.render(mode='top_down')

@@ -22,6 +22,7 @@ from dwa import Config
 from shutil import copyfile
 import glob
 import os
+import cv2
 
 # from experiments.utils import save_img
 
@@ -119,6 +120,7 @@ def on_key_press(symbol, modifiers):
         env.unwrapped.cam_angle[0] = 0
     elif symbol == key.ESCAPE:
         env.close()
+        cv2.destroyAllWindows()
         sys.exit(0)
     elif symbol == key.SPACE:
         top_down = not top_down
@@ -154,7 +156,11 @@ def update(dt):
     if planned:
         plan_counter = 0
         intention = dwa(env, config, plan_threshold=plan_threshold)
-        intention.show()
+        # intention.show()
+
+        img = cv2.cvtColor(np.array(intention), cv2.COLOR_RGB2BGR)
+        cv2.imshow("intention", img)
+        cv2.waitKey(1)
     elif moved: # only increase plan counter if you move
         plan_counter += 1
 
