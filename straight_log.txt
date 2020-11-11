@@ -1,0 +1,2 @@
+2020-11-11 15:57:17.980933: success: False, reward: -1.7270626457685572, loss: 33, time_taken: 25.36519503593445, obstacles_avoided: 0.
+2020-11-11 15:58:48.222638: success: False, reward: -1.7202086795900824, loss: 24, time_taken: 115.60712814331055, obstacles_avoided: 0.

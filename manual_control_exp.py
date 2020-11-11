@@ -117,7 +117,7 @@ def update(dt):
         im.save('screen.png')
 
     if done:
-        print('Done!')
+        print(f'done_code: {done_code}')
         success = False
         if done_code == 'finished':
             success = True

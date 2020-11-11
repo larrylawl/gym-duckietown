@@ -473,9 +473,11 @@ class Simulator(gym.Env):
                 tile_idx = self.np_random.randint(0, len(self.drivable_tiles))
                 tile = self.drivable_tiles[tile_idx]
 
+        # if self.start_pos is not None and self.start_angle is not None:
+        #     propose_pos = self.start_pos
+        #     propose_angle = self.start_angle
+        # else:
         # Keep trying to find a valid spawn position on this tile
-
-
         for _ in range(MAX_SPAWN_ATTEMPTS):
             i, j = tile['coords']
 
@@ -521,7 +523,8 @@ class Simulator(gym.Env):
             raise Exception(msg)
 
         self.cur_pos = propose_pos
-        self.cur_angle = propose_angle
+        # self.cur_angle = propose_angle
+        self.cur_angle = self.start_angle
 
         logger.info('Starting at %s %s' % (self.cur_pos, self.cur_angle))
 
@@ -620,13 +623,24 @@ class Simulator(gym.Env):
         self.start_tile = None
         if 'start_tile' in map_data:
             self.start_tile = self._get_tile(*map_data['start_tile'])
+
+        self.start_angle = None
+        if 'start_angle' in map_data:
+            self.start_angle = map_data['start_angle'] * math.pi / 180
+        
+        self.start_pos = None
+        if 'start_pos' in map_data:
+            self.start_pos = map_data['start_pos']
+            x, _, z = self.start_pos
+            self.start_tile = self._get_tile(x, z)
         
         # Get the goal tile and pos from the map, if specified
         self.goal_pos = None
         self.goal_tile = None
         if 'goal_pos' in map_data:
             self.goal_pos = map_data['goal_pos']
-            self.goal_tile = self._get_tile(*self.goal_pos)
+            gx, _, gz = self.goal_pos
+            self.goal_tile = self._get_tile(gx, gz)
         
         if "udem1" in self.map_name:
             # goal tile: (5, 4)

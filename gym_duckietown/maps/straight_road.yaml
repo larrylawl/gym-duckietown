@@ -5,7 +5,7 @@ tiles:
 # Always start driving on the leftmost tile
 # The position and direction of the agent on the tile will be randomized
 # start_pos: [0, 0, 0.4]
-start_angle: 0
+start_angle: 150
 goal_pos: [35, 0, 0]
 
 tile_size: 1

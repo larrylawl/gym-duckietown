@@ -455,8 +455,8 @@ def dwa(env, config, robot_type=RobotType.circle, plan_threshold = 10, show_anim
     xi = np.array([px, pz, yaw, v, w]) # stores initial
     # print(f"[px, pz, yaw, v, w]: {x}")
     # goal position [x(m), y(m)]
-    gx, gy = env.goal_pos
-    goal = np.array([gx, -gy]) # GOAL
+    gx, _, gz = env.goal_pos
+    goal = np.array([gx, -gz]) # GOAL
 
     # input [forward speed, yaw_rate]
 
