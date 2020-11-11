@@ -1507,7 +1507,7 @@ class Simulator(gym.Env):
             done_code = 'invalid-pose'
             done = True
         # Reached goal tile
-        elif self.goal_tile is not None and self.get_agent_info()['Simulator'] and['tile_coords'] == [*self.goal_tile['coords']]:
+        elif self.goal_tile is not None and self.get_agent_info()['Simulator']['tile_coords'] == [*self.goal_tile['coords']]:
             msg = "Congratulations! You are a DuckieTown Master!"
             logger.info(msg)
             reward = self.compute_reward(self.cur_pos, self.cur_angle, self.speed)

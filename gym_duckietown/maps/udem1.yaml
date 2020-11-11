@@ -179,10 +179,10 @@ goal_pos: [5.5, 0, 4.5]
 # Alternative goal positions
 # start_pos: [4.7, 0, 5.5]
 # start_angle: 180
-# goal_pos: [3, 1]
+# goal_pos: [3, 0, 1]
 
 # start_pos: [6.5, 0, 3.3]
 # start_angle: 270
-# goal_pos: [2, 3]
+# goal_pos: [2, 0, 3]
 
 tile_size: 1

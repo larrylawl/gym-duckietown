@@ -6,7 +6,7 @@ tiles:
 # The position and direction of the agent on the tile will be randomized
 start_pos: [0.5, 0, 0.5]
 start_angle: 0
-goal_pos: [35, 0, 0]
+goal_pos: [10.0, 0, 0]
 
 tile_size: 1
 
@@ -19,7 +19,7 @@ objects:
   optional: false
 
 - kind: duckie
-  pos: [2.5, 0.68]
+  pos: [2.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -30,7 +30,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [4.5, 0.68]
+  pos: [4.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -40,7 +40,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [6.5, 0.68]
+  pos: [6.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -50,7 +50,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [8.5, 0.68]
+  pos: [8.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -60,7 +60,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [10.5, 0.68]
+  pos: [10.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -70,7 +70,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [12.5, 0.68]
+  pos: [12.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -80,7 +80,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [14.5, 0.68]
+  pos: [14.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -90,7 +90,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [16.5, 0.68]
+  pos: [16.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -100,7 +100,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [18.5, 0.68]
+  pos: [18.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -110,7 +110,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [20.5, 0.68]
+  pos: [20.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -120,7 +120,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [22.5, 0.68]
+  pos: [22.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -130,7 +130,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [24.5, 0.68]
+  pos: [24.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -140,7 +140,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [26.5, 0.68]
+  pos: [26.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -150,7 +150,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [28.5, 0.68]
+  pos: [28.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -160,7 +160,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [30.5, 0.68]
+  pos: [30.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -170,7 +170,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [32.5, 0.68]
+  pos: [32.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false
@@ -180,7 +180,7 @@ objects:
   height: 0.08
   optional: false
 - kind: duckie
-  pos: [34.5, 0.68]
+  pos: [34.5, 0.6]
   rotate: -90
   height: 0.08
   optional: false

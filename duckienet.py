@@ -206,7 +206,7 @@ def update(dt):
 
     # From labels, intention and speed, derive next action using IntentionNet
     next_action = inet.predict_control(labels, intention_array, speed, segmented=args.seg).squeeze()
-    next_action[0] = min(0.44, next_action[0])
+    next_action[0] = min(0.25, next_action[0])
     print("Predicted control: ", next_action)
 
     if key_handler[key.RETURN]:
@@ -241,11 +241,11 @@ def update(dt):
 
 def log(success, reward, loss, time_taken, obstacles_avoided):
     import datetime, os
-    if os.path.exists("log.txt"):
-        append_write = 'a'
-    else:
-        append_write = 'w'
-    text_file = open("log.txt", append_write)
+    # if os.path.exists("log.txt"):
+    #     append_write = 'a'
+    # else:
+    #     append_write = 'w'
+    text_file = open("log.txt", 'w')
     text_file.write(f'{datetime.datetime.now()}: success: {success}, reward: {reward}, loss: {loss}, time_taken: {time_taken}, obstacles_avoided: {obstacles_avoided}.\n')
     text_file.close()
 
