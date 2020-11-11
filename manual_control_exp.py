@@ -89,6 +89,9 @@ def update(dt):
     This function is called at every frame to handle
     movement/stepping and redrawing
     """
+    objects_avoided = env.get_agent_info()['Simulator']['objects_avoided']
+
+    print(f'objects_avoided: {objects_avoided}')
 
     # agent_tile = env.get_agent_info()['Simulator']['tile_coords']
     # if agent_tile == [*env.goal_tile['coords']]:
@@ -128,7 +131,8 @@ def update(dt):
             success = True
         end = time.time()
         time_taken = end - start
-        log(success, reward, loss, time_taken)
+        objects_avoided = env.get_agent_info()['Simulator']['objects_avoided']
+        log(success, reward, loss, time_taken, objects_avoided)
         env.reset()
 
     if top_down:
@@ -136,14 +140,14 @@ def update(dt):
     else:
         env.render()
 
-def log(success, reward, loss, time_taken):
+def log(success, reward, loss, time_taken, obstacles_avoided):
     import datetime, os
     if os.path.exists("log.txt"):
         append_write = 'a'
     else:
         append_write = 'w'
     text_file = open("log.txt", append_write)
-    text_file.write(f'{datetime.datetime.now()}: success: {success}, reward: {reward}, loss: {loss}, time_taken: {time_taken}.\n')
+    text_file.write(f'{datetime.datetime.now()}: success: {success}, reward: {reward}, loss: {loss}, time_taken: {time_taken}, obstacles_avoided: {obstacles_avoided}.\n')
     text_file.close()
 
 pyglet.clock.schedule_interval(update, 1.0 / env.unwrapped.frame_rate)

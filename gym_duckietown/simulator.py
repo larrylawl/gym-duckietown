@@ -361,6 +361,8 @@ class Simulator(gym.Env):
         # Robot's current speed
         self.speed = 0
 
+        # Robot's obstacles avoided
+        self.objects_avoided = 0
 
         if self.randomize_maps_on_reset:
             map_name = np.random.choice(self.map_names)
@@ -609,7 +611,6 @@ class Simulator(gym.Env):
                     self.drivable_tiles.append(tile)
                 else:
                     self.obstacle_tiles.append(tile)
-
         self.mesh = ObjMesh.get('duckiebot')
         self._load_objects(map_data)
 
@@ -672,6 +673,9 @@ class Simulator(gym.Env):
         # (N): Safety radius for object used in calculating reward
         self.collidable_safety_radii = []
 
+        # object tiles
+        self.object_tiles_coods = set()
+
         # For each object
         for obj_idx, desc in enumerate(map_data.get('objects', [])):
             kind = desc['kind']
@@ -723,6 +727,8 @@ class Simulator(gym.Env):
                     raise Exception(msg)
 
             self.objects.append(obj)
+            # print(f'tile: {self._get_tile(x, z)}')
+            self.object_tiles_coods.add(self._get_tile(x, z)['coords'])
 
             # Compute collision detection information
 
@@ -1314,6 +1320,7 @@ class Simulator(gym.Env):
             info['cur_pos'] = [float(pos[0]), float(pos[1]), float(pos[2])]
             info['cur_angle'] = float(angle)
             info['wheel_velocities'] = [self.wheelVels[0], self.wheelVels[1]]
+            info['objects_avoided'] = self.objects_avoided
 
             # put in cartesian coordinates
             # (0,0 is bottom left)
@@ -1375,6 +1382,10 @@ class Simulator(gym.Env):
         return reward
 
     def step(self, action: np.ndarray):
+        self.update_previous_pos(self.cur_pos)
+        # prev_tile_coods = self.previous_tile['coords']
+        # print(f'prev tile coods: {prev_tile_coods}')
+
         action = np.clip(action, -1, 1)
         # Actions could be a Python list
         action = np.array(action)
@@ -1393,9 +1404,26 @@ class Simulator(gym.Env):
         d = self._compute_done_reward()
         misc['Simulator']['msg'] = d.done_why
 
+        x, _, z = self.cur_pos
         loss = self._compute_loss()
 
+        self.update_objects_avoided()
+
         return obs, d.reward, d.done, misc, loss, d.done_code
+    
+    def update_previous_pos(self, cur_pos):
+        self.previous_pos = cur_pos
+    
+    def update_objects_avoided(self):
+        # if on obstacle_tile, add 1
+        # if died on obstacle_tile, minus 1
+        px, _, pz = self.previous_pos
+        x, _, z = self.cur_pos
+        p_tile = self._get_tile(px, pz)
+        c_tile = self._get_tile(x, z)
+
+        if p_tile != c_tile and p_tile['coords'] in self.object_tiles_coods:
+            self.objects_avoided += 1
 
     def _compute_loss(self):
         """ Number of minimum drivable tiles away from goal state
