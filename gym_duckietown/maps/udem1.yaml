@@ -20,10 +20,10 @@ tiles:
 #      that (1.5, 2.5) would be exactly in the middle of tile (1, 2)
 # height: Objects can be scaled according to their real-world height in meters
 #         Duckietown tiles are 61cm, or 0.61 meter
-# rotate: the rotation angle determine the object's orientation
-#         a positive rotation angle corresponds to a counter-clockwise
-#         (leftward) rotation. The angles are in degrees.
-#         Models should, at angle 0, face towards the positive X axis.
+# rotate: the rotation start_angle determine the object's orientation
+#         a positive rotation start_angle corresponds to a counter-clockwise
+#         (leftward) rotation. The start_angles are in degrees.
+#         Models should, at start_angle 0, face towards the positive X axis.
 objects:
 
 - kind: tree
@@ -142,47 +142,47 @@ objects:
 
 # # 1 
 # start_pos: [6.57, 0, 4.49]
-# angle: 183
+# start_angle: 183
 # # 2 
 # start_pos: [4.2, 0, 5.58]
-# angle: 0
+# start_angle: 0
 # # 3 
 # start_pos: [6.52, 0, 1.84] 
-# angle: 270 
+# start_angle: 270 
 # # 4 
 # start_pos: [3.5, 0, 4.3]
-# angle: 270
+# start_angle: 270
 # # 5
 # start_pos: [3.5, 0, 3.2]
-# angle: 270
+# start_angle: 270
 # # 6 
 # start_pos: [2.15, 0, 3.3]
-# angle: 0
+# start_angle: 0
 # # 7 
 # start_pos: [3.4, 0, 1.7]
-# angle: 270
+# start_angle: 270
 # start_pos: [3.7, 0, 1.5]
-# angle: 0
+# start_angle: 0
 # # 9
-start_pos: [1.5, 0, 1.77]
-angle: 270
+# start_pos: [1.5, 0, 1.77]  # Not working
+# start_angle: 270
 # start_pos: [1.8, 0, 1.5]
-# angle: 0
+# start_angle: 0
 # #
 # start_pos: [1.5, 0, 3.5]
-# angle: 0
-# start_pos: [1.5, 0, 3.5]
-# angle: 270
+# start_angle: 0
+start_pos: [1.5, 0, 3.5]
+start_angle: 270
 
 goal_pos: [5.5, 0, 4.5]
 
 # Alternative goal positions
 # start_pos: [4.7, 0, 5.5]
-# angle: 180
+# start_angle: 180
 # goal_pos: [3, 1]
 
 # start_pos: [6.5, 0, 3.3]
-# angle: 270
+# start_angle: 270
 # goal_pos: [2, 3]
 
 tile_size: 1

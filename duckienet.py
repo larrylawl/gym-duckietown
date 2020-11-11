@@ -141,7 +141,7 @@ def update(dt):
     cycle_end = time.time()
     cycle = cycle_end - cycle_start
     cycle_start = cycle_end
-    list_cycles.append(cycle)
+    list_cycles.append(str(cycle * 1000))  # milliseconds
 
     action = next_action
      
@@ -195,7 +195,7 @@ def update(dt):
         labels = np.repeat(labels, 3, axis=2)
     else:
         # Use image directly
-        labels = img_to_array(Image.fromarray(obs))
+        labels = img_to_array(Image.fromarray(obs).resize(size=(224, 224)))
 
     #################
     # INTENTION-NET #
@@ -213,7 +213,7 @@ def update(dt):
         im.save('screen.png')
 
     if done:
-        list_cycles("Done. Planning...")
+        list_cycles.append("Done. Planning...")
         print(f'Done:{done_code}')
         success = False
         if done_code == 'finished':
@@ -258,9 +258,7 @@ event_loop.run()
 
 env.close()
 
-# Save list of cycles into csv
-import csv
-
-with open('list_cycles.csv','wb') as result_file:
-    wr = csv.writer(result_file)
-    wr.writerows(list_cycles)
+# Save list of cycles into txt file
+with open('list_cycles.txt','w') as f:
+    for item in list_cycles:
+        f.write(item + "\n")
