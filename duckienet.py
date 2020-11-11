@@ -134,7 +134,7 @@ def update(dt):
     
     global next_action, intention
 
-    action = next_action - np.array([0.15, 0])
+    action = next_action
      
     global plan_counter
     planned = plan_counter == steps_before_plan
@@ -194,11 +194,11 @@ def update(dt):
 
     # From labels, intention and speed, derive next action using IntentionNet
     next_action = inet.predict_control(labels, intention_array, speed, segmented=True).squeeze()
+    next_action[0] = min(0.44, next_action[0])
     print("Predicted control: ", next_action)
 
     if key_handler[key.RETURN]:
         im = Image.fromarray(obs)
-
         im.save('screen.png')
 
     if done:
@@ -211,6 +211,12 @@ def update(dt):
         objects_avoided = env.get_agent_info()['Simulator']['objects_avoided']
         log(success, reward, loss, time_taken, objects_avoided)
         env.reset()
+        intention = dwa(env, config, plan_threshold=30)
+        # intention.show()
+
+        img = cv2.cvtColor(np.array(intention), cv2.COLOR_RGB2BGR)
+        cv2.imshow("intention", img)
+        cv2.waitKey(1)
         # event_loop.exit()
 
     if top_down:
