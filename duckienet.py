@@ -126,13 +126,20 @@ def did_move():
 
 intention = None
 config = Config(env)
+list_cycles = []
 
 def update(dt):
     """    This function is called at every frame to handle
     movement/stepping and redrawing
     """
     
-    global next_action, intention
+    global next_action, intention, cycle_start
+
+    # Get time taken for one inference cycle
+    cycle_end = time.time()
+    cycle = cycle_end - cycle_start
+    cycle_start = cycle_end
+    list_cycles.append(cycle)
 
     action = next_action
      
@@ -140,6 +147,7 @@ def update(dt):
     planned = plan_counter == steps_before_plan
     moved = did_move()
     if planned:
+        list_cycles.append("Planning...")
         plan_counter = 0
         intention = dwa(env, config, plan_threshold=30)
         # intention.show()
@@ -162,8 +170,6 @@ def update(dt):
     if key_handler[key.LSHIFT]:
         action *= 1.5
 
-    # obs, reward, done, info = env.step(action)
-    # print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
     obs, reward, done, info, loss, done_code = env.step(action)
     # print('step_count = %s, reward=%.3f, loss=%i' % (env.unwrapped.step_count, reward, loss))
 
@@ -202,6 +208,7 @@ def update(dt):
         im.save('screen.png')
 
     if done:
+        list_cycles("Done. Planning...")
         print(f'Done:{done_code}')
         success = False
         if done_code == 'finished':
@@ -211,6 +218,8 @@ def update(dt):
         objects_avoided = env.get_agent_info()['Simulator']['objects_avoided']
         log(success, reward, loss, time_taken, objects_avoided)
         env.reset()
+
+        # Restart plan
         intention = dwa(env, config, plan_threshold=30)
         # intention.show()
 
@@ -238,7 +247,15 @@ pyglet.clock.schedule_interval(func=update, interval=1.0 / env.unwrapped.frame_r
 
 # Enter main event loop
 start = time.time()
+cycle_start = time.time()
 event_loop = pyglet.app.EventLoop()
 event_loop.run()
 
 env.close()
+
+# Save list of cycles into csv
+import csv
+
+with open('list_cycles.csv','wb') as result_file:
+    wr = csv.writer(result_file)
+    wr.writerows(list_cycles)
