@@ -171,8 +171,10 @@ objects:
 # #
 # start_pos: [1.5, 0, 3.5]
 # start_angle: 0
-start_pos: [1.5, 0, 3.5]
-start_angle: 270
+# start_pos: [1.5, 0, 3.5]
+# start_angle: 270
+start_pos: [4.8, 0, 1.5]
+start_angle: 0
 
 goal_pos: [5.5, 0, 4.5]
 

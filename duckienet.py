@@ -232,7 +232,7 @@ def update(dt):
         img = cv2.cvtColor(np.array(intention), cv2.COLOR_RGB2BGR)
         cv2.imshow("intention", img)
         cv2.waitKey(1)
-        event_loop.exit()
+        # event_loop.exit()
 
     if top_down:
         env.render(mode='top_down')
